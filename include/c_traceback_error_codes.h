@@ -83,15 +83,16 @@
 */
 
 #define CTB_UNKNOWN_ERROR -1
+#define CTB_SUCCESS 0
 
 /* ------------------------------------------------------------
- *  Base Exception & Direct Subclasses (0 - 19)
+ *  Base Exception & Direct Subclasses (1 - 19)
  * ------------------------------------------------------------ */
-#define CTB_BASE_EXCEPTION 0
-#define CTB_GENERATOR_EXIT 1
-#define CTB_KEYBOARD_INTERRUPT 2
-#define CTB_SYSTEM_EXIT 3
-#define CTB_EXCEPTION 4
+#define CTB_BASE_EXCEPTION 1
+#define CTB_GENERATOR_EXIT 2
+#define CTB_KEYBOARD_INTERRUPT 3
+#define CTB_SYSTEM_EXIT 4
+#define CTB_EXCEPTION 5
 
 /* ------------------------------------------------------------
  *  Arithmetic Errors (20 - 29)
