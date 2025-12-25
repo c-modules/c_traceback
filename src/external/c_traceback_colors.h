@@ -1,3 +1,6 @@
+#ifndef C_TRACEBACK_COLORS_H
+#define C_TRACEBACK_COLORS_H
+
 // clang-format off
 #define CTB_RESET_COLOR "\033[0m"                // Reset to normal text
 
@@ -16,3 +19,5 @@
 #define CTB_ERROR_TYPE_COLOR "\033[1;95m"        // Bright Purple, Bold
 #define CTB_ERROR_MESSAGE_COLOR "\033[0;35m"     // Purple
 // clang-format on
+
+#endif

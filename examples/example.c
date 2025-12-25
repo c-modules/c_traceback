@@ -1,9 +1,5 @@
 #include <stdio.h>
 
-/* Private API */
-#include "internal/common.h"
-
-/* Public API */
 #include "c_traceback.h"
 
 void nested_test_warning();
@@ -17,8 +13,6 @@ int main(void)
         printf("Error: unable to make ctb_context");
         goto error;
     }
-    printf("num_errors: %d\n", ctb_context->num_errors);
-    fflush(stdout);
 
     // Test raise warning
     nested_test_warning();

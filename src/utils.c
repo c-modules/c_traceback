@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "c_traceback.h"
+#include "internal/utils.h"
 
 #if defined(_WIN32)
 #include <io.h>

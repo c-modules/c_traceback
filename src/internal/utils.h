@@ -5,6 +5,9 @@
  * \author Ching-Yin Ng
  */
 
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <stdbool.h>
 
 /**
@@ -22,3 +25,5 @@ bool should_use_color(FILE *stream);
  * \return A constant character pointer to the string representation of the error code.
  */
 const char *error_code_to_string(int code);
+
+#endif

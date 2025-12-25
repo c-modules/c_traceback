@@ -1,3 +1,0 @@
-num_errors: 0
-DeprecationWarning: File "test.c", line 34 in nested_test_warning:
-    This function is deprecated in version 0.0.1. Use hello_world() instead.
