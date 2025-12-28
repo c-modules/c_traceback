@@ -14,7 +14,13 @@
 typedef struct CTB_Context CTB_Context;
 
 // Maximum number of call stack frames
-#define MAX_CALL_STACK_DEPTH 64
+#define MAX_CALL_STACK_DEPTH 32
+
+// Maximum number of simultaneous errors
+#define MAX_ERROR_DEPTH 8
+
+// Maximum length of error message
+#define MAX_ERROR_MESSAGE_LENGTH 256
 
 /**
  * \brief Wrapper macro to automatically manage call stack frames.
@@ -34,11 +40,14 @@ typedef struct CTB_Context CTB_Context;
  *
  * \param[in] ctb_error The error type.
  * \param[in] msg Error message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_ERROR_INLINE(ctb_error, msg)                                           \
+#define CTB_LOG_ERROR_INLINE(ctb_error, msg, ...)                                      \
     do                                                                                 \
     {                                                                                  \
-        ctb_log_error_inline(__FILE__, __LINE__, __func__, ctb_error, msg);            \
+        ctb_log_error_inline(                                                          \
+            __FILE__, __LINE__, __func__, ctb_error, msg, __VA_ARGS__                  \
+        );                                                                             \
     } while (0)
 
 /**
@@ -46,22 +55,26 @@ typedef struct CTB_Context CTB_Context;
  *
  * \param[in] ctb_warning The warning type.
  * \param[in] msg Warning message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_WARNING_INLINE(ctb_warning, msg)                                       \
+#define CTB_LOG_WARNING_INLINE(ctb_warning, msg, ...)                                  \
     do                                                                                 \
     {                                                                                  \
-        ctb_log_warning_inline(__FILE__, __LINE__, __func__, ctb_warning, msg);        \
+        ctb_log_warning_inline(                                                        \
+            __FILE__, __LINE__, __func__, ctb_warning, msg, __VA_ARGS__                \
+        );                                                                             \
     } while (0)
 
 /**
  * \brief Wrapper for logging a message to stdout without stacktrace.
  *
  * \param[in] msg Warning message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_MESSAGE_INLINE(msg)                                                    \
+#define CTB_LOG_MESSAGE_INLINE(msg, ...)                                               \
     do                                                                                 \
     {                                                                                  \
-        ctb_log_message_inline(__FILE__, __LINE__, __func__, msg);                     \
+        ctb_log_message_inline(__FILE__, __LINE__, __func__, msg, __VA_ARGS__);        \
     } while (0)
 
 /**
@@ -88,13 +101,15 @@ void ctb_pop_call_stack_frame(void);
  * \param[in] func Function where the error occurs.
  * \param[in] error The error type.
  * \param[in] msg Error message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
 void ctb_log_error_inline(
     const char *restrict file,
     const int line,
     const char *restrict func,
     const CTB_Error error,
-    const char *restrict msg
+    const char *restrict msg,
+    ...
 );
 
 /**
@@ -105,13 +120,15 @@ void ctb_log_error_inline(
  * \param[in] func Function where the warning occurs.
  * \param[in] warning The warning type.
  * \param[in] msg Warning message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
 void ctb_log_warning_inline(
     const char *restrict file,
     const int line,
     const char *restrict func,
     const CTB_Warning warning,
-    const char *restrict msg
+    const char *restrict msg,
+    ...
 );
 
 /**
@@ -121,12 +138,14 @@ void ctb_log_warning_inline(
  * \param[in] line Line number where the message is sent.
  * \param[in] func Function where the message is sent.
  * \param[in] msg Message.
+ * \param[in] ... Additional arguments for formatting the message.
  */
 void ctb_log_message_inline(
     const char *restrict file,
     const int line,
     const char *restrict func,
-    const char *restrict msg
+    const char *restrict msg,
+    ...
 );
 
 #endif /* C_TRACEBACK_H */
