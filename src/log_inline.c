@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "c_traceback.h"
 #include "c_traceback_colors.h"
@@ -19,7 +20,7 @@ static void ctb_log_inline(
     FILE *stream,
     const char *header_color,
     const char *message_color,
-    const char *restrict file,
+    const char *restrict file_address,
     const int line,
     const char *restrict func,
     const char *restrict header,
@@ -29,25 +30,75 @@ static void ctb_log_inline(
 {
     if (should_use_color(stream))
     {
+        const char *filename = strrchr(file_address, '/');
+
         // clang-format off
         fprintf(
             stream,
-            "%s%s:%s File %s\"%s\"%s, line %s%d%s in %s%s%s:\n    %s",
+            "%s%s:%s %sFile \"%s",
             header_color, header, CTB_RESET_COLOR,
-            CTB_TRACEBACK_FILE_COLOR, file, CTB_RESET_COLOR,
-            CTB_TRACEBACK_LINE_COLOR, line, CTB_RESET_COLOR,
-            CTB_TRACEBACK_FUNC_COLOR, func, CTB_RESET_COLOR,
+            CTB_TRACEBACK_TEXT_COLOR, CTB_RESET_COLOR
+        );
+        // clang-format on
+
+        if (filename)
+        {
+            int dir_len = (int)(filename - file_address) + 1;
+            fprintf(
+                stream,
+                "%s%.*s%s",
+                CTB_TRACEBACK_TEXT_COLOR,
+                dir_len,
+                file_address,
+                CTB_RESET_COLOR
+            );
+            fprintf(
+                stream,
+                "%s%s%s",
+                CTB_TRACEBACK_FILE_COLOR,
+                filename + 1,
+                CTB_RESET_COLOR
+            );
+        }
+        else
+        {
+            fprintf(
+                stream,
+                "%s%s%s",
+                CTB_TRACEBACK_FILE_COLOR,
+                file_address,
+                CTB_RESET_COLOR
+            );
+        }
+
+        fprintf(
+            stream,
+            "%s\", line%s %s%d%s %sin%s %s%s%s:\n   %s",
+            CTB_TRACEBACK_TEXT_COLOR,
+            CTB_RESET_COLOR,
+            CTB_TRACEBACK_LINE_COLOR,
+            line,
+            CTB_RESET_COLOR,
+            CTB_TRACEBACK_TEXT_COLOR,
+            CTB_RESET_COLOR,
+            CTB_TRACEBACK_FUNC_COLOR,
+            func,
+            CTB_RESET_COLOR,
             message_color
         );
         vfprintf(stream, msg, args);
         fprintf(stream, "%s\n", CTB_RESET_COLOR);
         fflush(stream);
-        // clang-format on
     }
     else
     {
         fprintf(
-            stream, "%s: File \"%s\", line %d in %s:\n    ", header, file, line, func
+            stream,
+            "%s: File \"%s\", line %d in %s:\n    ",
+            header,
+            file_address,
+            line,
+            func
         );
         vfprintf(stream, msg, args);
         fputc('\n', stream);
