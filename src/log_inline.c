@@ -27,9 +27,7 @@ static void ctb_log_inline(
     va_list args
 )
 {
-    const bool use_color = should_use_color(stream);
-
-    if (use_color)
+    if (should_use_color(stream))
     {
         // clang-format off
         fprintf(
@@ -122,8 +120,8 @@ void ctb_log_message_inline(
     va_start(args, msg);
     ctb_log_inline(
         stream,
-        CTB_MESSAGE_BOLD_COLOR,
-        CTB_MESSAGE_COLOR,
+        CTB_NORMAL_BOLD_COLOR,
+        CTB_NORMAL_COLOR,
         file,
         line,
         func,

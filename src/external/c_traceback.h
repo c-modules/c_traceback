@@ -8,19 +8,22 @@
 #ifndef C_TRACEBACK_H
 #define C_TRACEBACK_H
 
+#include <stdarg.h>
+#include <stdbool.h>
+
 #include "c_traceback_colors.h"
 #include "c_traceback_errors.h"
 
 typedef struct CTB_Context CTB_Context;
 
 // Maximum number of call stack frames
-#define MAX_CALL_STACK_DEPTH 32
+#define CTB_MAX_CALL_STACK_DEPTH 32
 
 // Maximum number of simultaneous errors
-#define MAX_ERROR_DEPTH 8
+#define CTB_MAX_NUM_ERROR 8
 
 // Maximum length of error message
-#define MAX_ERROR_MESSAGE_LENGTH 256
+#define CTB_MAX_ERROR_MESSAGE_LENGTH 256
 
 /**
  * \brief Wrapper macro to automatically manage call stack frames.
@@ -32,7 +35,25 @@ typedef struct CTB_Context CTB_Context;
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #call);                \
         (call);                                                                        \
-        ctb_pop_call_stack_frame();                                                    \
+        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #call);                 \
+    } while (0)
+
+/**
+ * \brief Wrapper macro to automatically manage call stack frames.
+ *
+ * \param[in] call The function call to be wrapped.
+ * \param[in] label The label to jump to on error.
+ */
+#define CTB_CHECK_GOTO(call, label)                                                    \
+    do                                                                                 \
+    {                                                                                  \
+        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #call);                \
+        (call);                                                                        \
+        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #call);                 \
+        if (ctb_check_error_occurred())                                                \
+        {                                                                              \
+            goto label;                                                                \
+        }                                                                              \
     } while (0)
 
 /**
@@ -90,8 +111,14 @@ void ctb_push_call_stack_frame(
 
 /**
  * \brief Pop the top call stack frame.
+ * \param[in] file File where the function is called.
+ * \param[in] func Function name where the function is called.
+ * \param[in] line Line number where the function is called.
+ * \param[in] source_code Source code of the function call.
  */
-void ctb_pop_call_stack_frame(void);
+void ctb_pop_call_stack_frame(
+    const char *file, const char *func, const int line, const char *source_code
+);
 
 /**
  * \brief Log error message to stderr without stacktrace.
@@ -147,5 +174,36 @@ void ctb_log_message_inline(
     const char *restrict msg,
     ...
 );
+
+/**
+ * \brief Raise an error with the current call stack.
+ *
+ * \param[in] error The error type.
+ * \param[in] msg Error message.
+ * \param[in] ... Additional arguments for formatting the message.
+ */
+void ctb_raise_error(CTB_Error error, const char *restrict msg, ...);
+
+/**
+ * \brief Check if any error has occurred.
+ *
+ * \return true if an error has occurred, false otherwise.
+ */
+bool ctb_check_error_occurred(void);
+
+/**
+ * \brief Clear all recorded errors.
+ */
+void ctb_clear_error(void);
+
+/**
+ * \brief Log the traceback of all recorded errors to stderr.
+ */
+void ctb_log_error_traceback(void);
+
+/**
+ * \brief Dump the traceback of all recorded errors to stderr and clear errors.
+ */
+void ctb_dump_traceback(void);
 
 #endif /* C_TRACEBACK_H */

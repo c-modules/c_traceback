@@ -12,6 +12,7 @@ void function_a();
 void function_b();
 void function_c();
 void recursion(int i);
+void nested_function_to_raise_error(int i);
 
 int main(void)
 {
@@ -27,15 +28,15 @@ int main(void)
     printf("============= Stacktrace example ==============\n");
     fflush(stdout);
 
-    CTB_WRAP(function_a());
+    CTB_CHECK_GOTO(function_a(), error);
+    printf("This shouldn't be printed");
 
+error:
+    ctb_dump_traceback();
     printf("===============================================\n");
     fflush(stdout);
 
     return 0;
-
-error:
-    return 1;
 }
 
 void inline_error(int *i)
@@ -101,6 +102,7 @@ void function_a()
 void function_b()
 {
     CTB_WRAP(function_c());
+    ctb_raise_error(CTB_CHILD_PROCESS_ERROR, "Hello :)");
 }
 
 void function_c()
@@ -116,5 +118,15 @@ void recursion(int i)
         return;
     }
 
+    if (i == 120)
+    {
+        CTB_WRAP(nested_function_to_raise_error(i));
+    }
+
     CTB_WRAP(recursion(i + 1));
+}
+
+void nested_function_to_raise_error(int i)
+{
+    ctb_raise_error(CTB_VALUE_ERROR, "Test: current recursion depth: %d", i);
 }
