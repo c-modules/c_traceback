@@ -189,6 +189,8 @@ void ctb_log_error_traceback(void)
     const char *color_error_bold = use_color ? CTB_ERROR_BOLD_COLOR : "";
     const char *color_error = use_color ? CTB_ERROR_COLOR : "";
     const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
+    const char *color_another_exception =
+        use_color ? CTB_TRACEBACK_ANOTHER_EXCEPTION_COLOR : "";
 
     fprintf(
         stream,
@@ -255,7 +257,7 @@ void ctb_log_error_traceback(void)
                     stream,
                     "\n%sDuring handling of the above exception, another exception "
                     "occurred:%s\n",
-                    color_traceback_text,
+                    color_another_exception,
                     color_reset
                 );
             }

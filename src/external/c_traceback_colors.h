@@ -30,6 +30,7 @@
 // Traceback
 #define CTB_TRACEBACK_COUNTER_COLOR "\033[38;5;240m"        // Dark gray
 #define CTB_TRACEBACK_TEXT_COLOR "\033[38;5;240m"           // Dark gray
+#define CTB_TRACEBACK_ANOTHER_EXCEPTION_COLOR ""            // White / text color
 // clang-format on
 
 #endif /* C_TRACEBACK_COLORS_H */
