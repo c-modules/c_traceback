@@ -123,29 +123,54 @@ void ctb_clear_error(void)
 static void
 print_frame(FILE *stream, int index, const CTB_Frame_ *frame, bool use_color)
 {
+    const char *color_traceback_counter = use_color ? CTB_TRACEBACK_COUNTER_COLOR : "";
+    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
     const char *color_file = use_color ? CTB_TRACEBACK_FILE_COLOR : "";
     const char *color_line = use_color ? CTB_TRACEBACK_LINE_COLOR : "";
     const char *color_func = use_color ? CTB_TRACEBACK_FUNC_COLOR : "";
-    const char *color_regular = use_color ? CTB_ERROR_COLOR : "";
+    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
     const char *color_reset = use_color ? CTB_RESET_COLOR : "";
 
+    const char *filename = strrchr(frame->filename, '/');
+
+    // clang-format off
     fprintf(
         stream,
-        "  (#%02d) File %s\"%s\"%s, line %s%d%s in %s%s%s:\n    %s%s%s\n",
-        index,
-        color_file,
-        frame->filename,
-        color_reset,
-        color_line,
-        frame->line_number,
-        color_reset,
-        color_func,
-        frame->function_name,
-        color_reset,
-        color_regular,
-        frame->source_code,
-        color_reset
+        "  %s(#%02d)%s %sFile \"%s",
+        color_traceback_counter, index, color_reset,
+        color_traceback_text, color_reset
     );
+    // clang-format on
+
+    if (filename)
+    {
+        int dir_len = (int)(filename - frame->filename) + 1;
+        fprintf(
+            stream,
+            "%s%.*s%s",
+            color_traceback_text,
+            dir_len,
+            frame->filename,
+            color_reset
+        );
+        fprintf(stream, "%s%s%s", color_file, filename + 1, color_reset);
+    }
+    else
+    {
+        fprintf(stream, "%s%s%s", color_file, frame->filename, color_reset);
+    }
+
+    // clang-format off
+    fprintf(
+        stream,
+        "%s\", line%s %s%d%s %sin%s %s%s%s:\n    %s%s%s\n",
+        color_traceback_text, color_reset,
+        color_line, frame->line_number, color_reset,
+        color_traceback_text, color_reset,
+        color_func, frame->function_name, color_reset,
+        color_error, frame->source_code, color_reset
+    );
+    // clang-format on
 }
 
 void ctb_log_error_traceback(void)
@@ -163,6 +188,7 @@ void ctb_log_error_traceback(void)
     const char *color_reset = use_color ? CTB_RESET_COLOR : "";
     const char *color_error_bold = use_color ? CTB_ERROR_BOLD_COLOR : "";
     const char *color_error = use_color ? CTB_ERROR_COLOR : "";
+    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
 
     fprintf(
         stream,
@@ -199,8 +225,10 @@ void ctb_log_error_traceback(void)
             {
                 fprintf(
                     stream,
-                    "\n      [... Skipped %d frames ...]\n\n",
-                    num_frames - CTB_MAX_CALL_STACK_DEPTH
+                    "\n      %s[... Skipped %d frames ...]%s\n\n",
+                    color_traceback_text,
+                    num_frames - CTB_MAX_CALL_STACK_DEPTH,
+                    color_reset
                 );
                 print_frame(
                     stream,
@@ -212,7 +240,7 @@ void ctb_log_error_traceback(void)
 
             fprintf(
                 stream,
-                "%s%s%s: %s%s%s\n",
+                "%s%s:%s %s%s%s\n",
                 color_error_bold,
                 error_to_string(snapshot->error),
                 color_reset,
@@ -223,10 +251,12 @@ void ctb_log_error_traceback(void)
 
             if (e < (num_errors_to_print - 1))
             {
-                fputs(
-                    "\nDuring handling of the above exception, another exception "
-                    "occurred:\n",
-                    stream
+                fprintf(
+                    stream,
+                    "\n%sDuring handling of the above exception, another exception "
+                    "occurred:%s\n",
+                    color_traceback_text,
+                    color_reset
                 );
             }
         }
