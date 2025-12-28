@@ -65,7 +65,7 @@ void inline_warning()
 void inline_warning_level2()
 {
     CTB_LOG_WARNING_INLINE(
-        CTB_MEMORY_ERROR, "This should be inline warning level 2 with memory error"
+        CTB_USER_WARNING, "This should be inline warning level 2 with user warning"
     );
 }
 

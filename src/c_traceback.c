@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "c_traceback.h"
+#include "c_traceback_errors.h"
 #include "internal/common.h"
 #include "internal/utils.h"
 
@@ -78,7 +79,7 @@ void ctb_log_error_inline(
     const char *restrict file,
     const int line,
     const char *restrict func,
-    const int error_code,
+    const CTB_Error error,
     const char *restrict msg
 )
 {
@@ -90,7 +91,7 @@ void ctb_log_error_inline(
         file,
         line,
         func,
-        error_code_to_string(error_code),
+        error_to_string(error),
         msg
     );
 }
@@ -99,7 +100,7 @@ void ctb_log_warning_inline(
     const char *restrict file,
     const int line,
     const char *restrict func,
-    const int error_code,
+    const CTB_Warning warning,
     const char *restrict msg
 )
 {
@@ -111,7 +112,7 @@ void ctb_log_warning_inline(
         file,
         line,
         func,
-        error_code_to_string(error_code),
+        warning_to_string(warning),
         msg
     );
 }
