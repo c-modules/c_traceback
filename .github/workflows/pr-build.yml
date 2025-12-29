@@ -7,9 +7,12 @@ on:
 
 jobs:
   build:
-    # only run if the PR source branch is 'website'
     if: github.head_ref == 'website'
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./website
 
     steps:
       - name: Checkout
