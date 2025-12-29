@@ -14,7 +14,27 @@ export const metadata: Metadata = {
 const navbar = (
     <Navbar
         projectLink="https://github.com/alvinng4/c_traceback"
-        logo={<span style={{fontWeight: "bold", fontSize: "1.1rem"}}>C Traceback</span>}
+        logo={
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <img
+                src="/images/general/logo.svg"
+                alt="Logo light"
+                width={20}
+                height={20}
+                className="block dark:hidden"
+            />
+            <img
+                src="/images/general/logo_dark.svg"
+                alt="Logo dark"
+                width={20}
+                height={20}
+                className="hidden dark:block"
+            />
+            <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
+                C Traceback
+            </span>
+            </div>
+        }
         // ... Your additional navbar options
     />
 )
