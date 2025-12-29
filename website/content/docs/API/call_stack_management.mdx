@@ -7,13 +7,17 @@ import ParamsTable from "components/params-table.tsx";
 # Call Stack Management
 
 In order to obtain the traceback in run time, we need to actively manage the call stack.
-It is not difficult, but functions or code blocks have to be wrapped with a macro, which 
-is quite verbose.
+Unfortunately, C doesn't provide an easy way to do this. Therefore, we will have to wrap
+function calls or code blocks with a macro. While this approach can be quite verbose, it
+is what makes our library possible.
 
 ## API
 
 ### `CTB_WRAP` <Badge text="Macro" />
 Wrapper macro for expression to automatically manage call stack frames.
+```c
+CTB_WRAP(expr)
+```
 
 #### Parameters
 <ParamsTable 
@@ -22,32 +26,35 @@ Wrapper macro for expression to automatically manage call stack frames.
   ]}
 />
 
+#### Expands to
+```c
+do                                                                                 \
+{                                                                                  \
+    ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
+    (expr);                                                                        \
+    ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                 \
+} while (0)
+```
+
 #### Usage
 ```c
 int function_a(void)
 {
-    CTB_WRAP(function_b());    // Wrap a function call
+    CTB_WRAP(function_b());    // Wraps a function call
 }
 
 int function_b(void)
 {
     int i = 0;
-    CTB_WRAP(i = 2);           // Wrap an assignment
+    CTB_WRAP(i = 2);           // Wraps an assignment
 }
-```
-
-#### Expands to
-```c
-do                                                                                 
-{                                                                                  
-    ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                
-    (expr);                                                                
-    ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                 
-} while (0)
 ```
 
 ### `CTB_Block` <Badge text="Macro" />
 Wrapper macro for a code block to automatically manage call stack frames.
+```c
+CTB_BLOCK(...)
+```
 
 #### Parameters
 <ParamsTable 
@@ -56,11 +63,21 @@ Wrapper macro for a code block to automatically manage call stack frames.
   ]}
 />
 
+#### Expands to
+```c
+do                                                                                \
+{                                                                                 \
+    ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);        \
+    __VA_ARGS__                                                                   \
+    ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
+} while (0)
+```
+
 #### Usage
 ```c
 int function_a(void)
 {
-    /* Wrap a code block */
+    /* Wraps a code block */
     CTB_BLOCK(
         int i = 0;
         if (i == 0)
@@ -72,14 +89,4 @@ int function_a(void)
     // Note: i is not accessible here
     // printf("%d", i); <-- Illegal!
 }
-```
-
-#### Expands to
-```c
-do                                                                                
-{                                                                                 
-    ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);        
-    __VA_ARGS__                                                                   
-    ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          
-} while (0)
 ```

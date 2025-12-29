@@ -1,0 +1,143 @@
+---
+title: Inline Logging
+---
+
+import ParamsTable from "components/params-table.tsx";
+
+# Inline Logging
+
+Sometimes, we just want to log a simple message without the full traceback.
+In this case, we can use the inline logging API.
+
+## API
+
+### `CTB_LOG_ERROR_INLINE` <Badge text="Macro" />
+Wrapper for logging an error to stderr without stacktrace.
+```c
+CTB_LOG_ERROR_INLINE(ctb_error, msg, ...)
+```
+
+<Callout type="warning">Logging an inline error has no effect on the context / call stack. It only logs an error message.</Callout>
+
+#### Parameters
+<ParamsTable 
+  params={[
+    { name: "ctb_error", type: "CTB_Error", desc: "The error type." },
+    { name: "msg", type: "const char *", desc: "Error message." },
+    { name: "...", type: "N/A", desc: "Additional arguments for formatting the message." },
+  ]}
+/>
+
+#### Expands to
+```c
+do                                                                                 \
+{                                                                                  \
+    ctb_log_error_inline(                                                          \
+        __FILE__, __LINE__, __func__, ctb_error, msg, __VA_ARGS__                  \
+    );                                                                             \
+} while (0)
+```
+
+#### Usage
+```c
+double division(double x, double y)
+{
+    if (y == 0)
+    {
+        CTB_LOG_ERROR_INLINE(
+            CTB_ZERO_DIVISION_ERROR,
+            "y cannot be zero! Received: %lf",
+            y
+        );
+        return 0.0;
+    }
+    return x / y;
+}
+```
+Output:
+```ansi
+[1;31mZeroDivisionError:[0m [38;5;240mFile "[0m[38;5;240m/home/alvinng/Desktop/c_trackback/examples/[0m[1;36mexample.c[0m[38;5;240m", line[0m [1;36m19[0m [38;5;240min[0m [1;36mdivision[0m:
+   [0;31my cannot be zero! Received: 0.000000[0m
+```
+
+### `CTB_LOG_WARNING_INLINE` <Badge text="Macro" />
+Wrapper for logging a warning to stderr without stacktrace.
+```c
+CTB_LOG_WARNING_INLINE(ctb_warning, msg, ...)
+```
+
+#### Parameters
+<ParamsTable 
+  params={[
+    { name: "ctb_warning", type: "CTB_Warning", desc: "The warning type." },
+    { name: "msg", type: "const char *", desc: "Warning message." },
+    { name: "...", type: "N/A", desc: "Additional arguments for formatting the message." },
+  ]}
+/>
+
+#### Expands to
+```c
+do                                                                                 \
+{                                                                                  \
+    ctb_log_warning_inline(                                                        \
+        __FILE__, __LINE__, __func__, ctb_warning, msg, __VA_ARGS__                \
+    );                                                                             \
+} while (0)
+```
+
+#### Usage
+```c
+double some_function(void)
+{
+    CTB_LOG_WARNING_INLINE(
+        CTB_DEPRECATION_WARNING,
+        "Function \"%s\" is deprecated. It will be removed in the next version.",
+        __func__
+    );
+
+    /* Do something */
+
+    return;
+}
+```
+Output:
+```ansi
+[1;33mDeprecationWarning:[0m [38;5;240mFile "[0m[38;5;240m/home/alvinng/Desktop/c_trackback/examples/[0m[1;36mexample.c[0m[38;5;240m", line[0m [1;36m17[0m [38;5;240min[0m [1;36msome_function[0m:
+   [5;33mFunction "some_function" is deprecated. It will be removed in the next version.[0m
+```
+
+### `CTB_LOG_MESSAGE_INLINE` <Badge text="Macro" />
+Wrapper for logging a message to stdout without stacktrace.
+```c
+CTB_LOG_MESSAGE_INLINE(msg, ...)
+```
+
+#### Parameters
+<ParamsTable 
+  params={[
+    { name: "msg", type: "const char *", desc: "Message." },
+    { name: "...", type: "N/A", desc: "Additional arguments for formatting the message." },
+  ]}
+/>
+
+#### Expands to
+```c
+do                                                                                 \
+{                                                                                  \
+    ctb_log_message_inline(__FILE__, __LINE__, __func__, msg, __VA_ARGS__);        \
+} while (0)
+```
+
+#### Usage
+```c
+void inline_message(int i)
+{
+    CTB_LOG_MESSAGE_INLINE("(Test %d) Hello, world! :)", i);
+}
+```
+
+Output:
+```ansi
+[1;95mMessage:[0m [38;5;240mFile "[0m[38;5;240m/home/alvinng/Desktop/c_trackback/examples/[0m[1;36mexample.c[0m[38;5;240m", line[0m [1;36m75[0m [38;5;240min[0m [1;36minline_message[0m:
+   [0;35m(Test 0) Hello, world! :)[0m
+```
