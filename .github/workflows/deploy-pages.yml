@@ -1,11 +1,11 @@
 name: Deploy Nextra Docs to GitHub Pages
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
+    paths:
+      - 'website/**'
   workflow_dispatch:
 
 permissions:
@@ -25,9 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          ref: main
-          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
