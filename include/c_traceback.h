@@ -16,24 +16,11 @@
 #include "config.h"
 
 /**
- * \brief Wrapper macro for a code block to automatically manage call stack frames.
- *
- * \param[in] ... The block of code to be wrapped.
- */
-#define CTB_BLOCK(...)                                                                 \
-    do                                                                                 \
-    {                                                                                  \
-        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
-        __VA_ARGS__                                                                    \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          \
-    } while (0)
-
-/**
  * \brief Wrapper macro for expression to automatically manage call stack frames.
  *
- * \param[in] expr The expression to be wrapped.
+ * \param[in] expr The expression to be traced.
  */
-#define CTB_WRAP(expr)                                                                 \
+#define TRACE(expr)                                                                    \
     do                                                                                 \
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
@@ -42,17 +29,50 @@
     } while (0)
 
 /**
- * \brief Wrapper macro to automatically manage call stack frames.
+ * \brief Wrapper macro for a code block to automatically manage call stack frames.
  *
- * \param[in] call The function call to be wrapped.
- * \param[in] label The label to jump to on error.
+ * \param[in] ... The block of code to be traced.
  */
-#define CTB_CHECK_GOTO(call, label)                                                    \
+#define TRACE_BLOCK(...)                                                               \
     do                                                                                 \
     {                                                                                  \
-        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #call);                \
-        (call);                                                                        \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #call);                 \
+        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
+        __VA_ARGS__                                                                    \
+        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          \
+    } while (0)
+
+/**
+ * \brief Wrapper for an expression. If an error occurs after the expression, jump to
+ * label.
+ *
+ * \param[in] expr The expression to be traced.
+ * \param[in] label The label to jump to on error.
+ */
+#define TRY_GOTO(expr, label)                                                          \
+    do                                                                                 \
+    {                                                                                  \
+        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
+        (expr);                                                                        \
+        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                 \
+        if (ctb_check_error_occurred())                                                \
+        {                                                                              \
+            goto label;                                                                \
+        }                                                                              \
+    } while (0)
+
+/**
+ * \brief Wrapper for a block of code. If an error occurs after the block executes, jump
+ * to label.
+ *
+ * \param[in] label The label to jump to on error.
+ * \param[in] ...   The block of code to be traced.
+ */
+#define TRY_BLOCK_GOTO(label, ...)                                                     \
+    do                                                                                 \
+    {                                                                                  \
+        ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
+        __VA_ARGS__                                                                    \
+        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          \
         if (ctb_check_error_occurred())                                                \
         {                                                                              \
             goto label;                                                                \
