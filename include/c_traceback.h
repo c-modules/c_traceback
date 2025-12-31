@@ -14,6 +14,7 @@
 #include "c_traceback/color_codes.h"
 #include "c_traceback/error.h"
 #include "c_traceback/log_inline.h"
+#include "c_traceback/traceback.h"
 #include "c_traceback_errors.h"
 #include "config.h"
 
@@ -110,15 +111,5 @@ void ctb_push_call_stack_frame(
  * \brief Pop the top call stack frame.
  */
 void ctb_pop_call_stack_frame(void);
-
-/**
- * \brief Log the traceback of all recorded errors to stderr.
- */
-void ctb_log_error_traceback(void);
-
-/**
- * \brief Dump the traceback of all recorded errors to stderr and clear errors.
- */
-void ctb_dump_traceback(void);
 
 #endif /* C_TRACEBACK_H */
