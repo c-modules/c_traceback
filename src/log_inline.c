@@ -15,8 +15,9 @@
 #include "internal/utils.h"
 
 /**
- * \brief Log inline message.
+ * \brief Helper for logging inline messages without the message body.
  *
+ * \param[in] use_color Whether to use color in the output.
  * \param[in, out] stream The output stream.
  * \param[in] header_color The color code for the header.
  * \param[in] message_color The color code for the message.
@@ -24,116 +25,19 @@
  * \param[in] line The line number.
  * \param[in] func The function name.
  * \param[in] header The header string.
- * \param[in] msg The message format string.
  */
-static void ctb_log_inline(
+static void ctb_log_inline_core(
+    const bool use_color,
     FILE *stream,
     const char *header_color,
     const char *message_color,
     const char *restrict file_address,
     const int line,
     const char *restrict func,
-    const char *restrict header,
-    const char *restrict msg
+    const char *restrict header
 )
 {
-    if (should_use_color(stream))
-    {
-        const int dir_len = get_parent_path_length(file_address);
-
-        // clang-format off
-        fprintf(
-            stream,
-            "%s%s:%s %sFile \"%s",
-            header_color, header, CTB_RESET_COLOR,
-            CTB_TRACEBACK_TEXT_COLOR, CTB_RESET_COLOR
-        );
-        // clang-format on
-
-        /* Print file address */
-        if (dir_len > 0)
-        {
-            fprintf(
-                stream,
-                "%s%.*s%s",
-                CTB_TRACEBACK_TEXT_COLOR,
-                dir_len,
-                file_address,
-                CTB_RESET_COLOR
-            );
-            fprintf(
-                stream,
-                "%s%s%s",
-                CTB_TRACEBACK_FILE_COLOR,
-                file_address + dir_len,
-                CTB_RESET_COLOR
-            );
-        }
-        else
-        {
-            fprintf(
-                stream,
-                "%s%s%s",
-                CTB_TRACEBACK_FILE_COLOR,
-                file_address,
-                CTB_RESET_COLOR
-            );
-        }
-
-        // clang-format off
-        fprintf(
-            stream,
-            "%s\", line%s %s%d%s %sin%s %s%s%s:\n   %s%s%s\n",
-            CTB_TRACEBACK_TEXT_COLOR, CTB_RESET_COLOR,
-            CTB_TRACEBACK_LINE_COLOR, line, CTB_RESET_COLOR,
-            CTB_TRACEBACK_TEXT_COLOR, CTB_RESET_COLOR,
-            CTB_TRACEBACK_FUNC_COLOR, func, CTB_RESET_COLOR,
-            message_color, msg, CTB_RESET_COLOR
-        );
-        // clang-format on
-    }
-    else
-    {
-        fprintf(
-            stream,
-            "%s: File \"%s\", line %d in %s:\n    %s\n",
-            header,
-            file_address,
-            line,
-            func,
-            msg
-        );
-    }
-
-    fflush(stream);
-}
-
-/**
- * \brief Log inline message with variadic arguments.
- *
- * \param[in, out] stream The output stream.
- * \param[in] header_color The color code for the header.
- * \param[in] message_color The color code for the message.
- * \param[in] file_address The file address.
- * \param[in] line The line number.
- * \param[in] func The function name.
- * \param[in] header The header string.
- * \param[in] msg The message format string.
- * \param[in] args The variadic arguments.
- */
-static void ctb_log_inline_fmt(
-    FILE *stream,
-    const char *header_color,
-    const char *message_color,
-    const char *restrict file_address,
-    const int line,
-    const char *restrict func,
-    const char *restrict header,
-    const char *restrict msg,
-    va_list args
-)
-{
-    if (should_use_color(stream))
+    if (use_color)
     {
         const int dir_len = get_parent_path_length(file_address);
 
@@ -187,8 +91,6 @@ static void ctb_log_inline_fmt(
             message_color
         );
         // clang-format on
-        vfprintf(stream, msg, args);
-        fprintf(stream, "%s\n", CTB_RESET_COLOR);
     }
     else
     {
@@ -200,6 +102,100 @@ static void ctb_log_inline_fmt(
             line,
             func
         );
+    }
+}
+
+/**
+ * \brief Log inline message.
+ *
+ * \param[in, out] stream The output stream.
+ * \param[in] header_color The color code for the header.
+ * \param[in] message_color The color code for the message.
+ * \param[in] file_address The file address.
+ * \param[in] line The line number.
+ * \param[in] func The function name.
+ * \param[in] header The header string.
+ * \param[in] msg The message string.
+ */
+static void ctb_log_inline(
+    FILE *stream,
+    const char *header_color,
+    const char *message_color,
+    const char *restrict file_address,
+    const int line,
+    const char *restrict func,
+    const char *restrict header,
+    const char *restrict msg
+)
+{
+    const bool use_color = should_use_color(stream);
+    ctb_log_inline_core(
+        use_color,
+        stream,
+        header_color,
+        message_color,
+        file_address,
+        line,
+        func,
+        header
+    );
+
+    if (use_color)
+    {
+        fprintf(stream, "%s%s\n", msg, CTB_RESET_COLOR);
+    }
+    else
+    {
+        fprintf(stream, "%s\n", msg);
+    }
+
+    fflush(stream);
+}
+
+/**
+ * \brief Log inline message with variadic arguments.
+ *
+ * \param[in, out] stream The output stream.
+ * \param[in] header_color The color code for the header.
+ * \param[in] message_color The color code for the message.
+ * \param[in] file_address The file address.
+ * \param[in] line The line number.
+ * \param[in] func The function name.
+ * \param[in] header The header string.
+ * \param[in] msg The message format string.
+ * \param[in] args The variadic arguments.
+ */
+static void ctb_log_inline_fmt(
+    FILE *stream,
+    const char *header_color,
+    const char *message_color,
+    const char *restrict file_address,
+    const int line,
+    const char *restrict func,
+    const char *restrict header,
+    const char *restrict msg,
+    va_list args
+)
+{
+    const bool use_color = should_use_color(stream);
+    ctb_log_inline_core(
+        use_color,
+        stream,
+        header_color,
+        message_color,
+        file_address,
+        line,
+        func,
+        header
+    );
+
+    if (use_color)
+    {
+        vfprintf(stream, msg, args);
+        fprintf(stream, "%s\n", CTB_RESET_COLOR);
+    }
+    else
+    {
         vfprintf(stream, msg, args);
         fputc('\n', stream);
     }

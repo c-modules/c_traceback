@@ -16,7 +16,7 @@
  * \param[in] ctb_error The error type.
  * \param[in] msg Error message.
  */
-#define CTB_LOG_ERROR_INLINE(ctb_error, msg)                                           \
+#define LOG_ERROR_INLINE(ctb_error, msg)                                               \
     do                                                                                 \
     {                                                                                  \
         ctb_log_error_inline(__FILE__, __LINE__, __func__, ctb_error, msg);            \
@@ -28,7 +28,7 @@
  * \param[in] ctb_warning The warning type.
  * \param[in] msg Warning message.
  */
-#define CTB_LOG_WARNING_INLINE(ctb_warning, msg)                                       \
+#define LOG_WARNING_INLINE(ctb_warning, msg)                                           \
     do                                                                                 \
     {                                                                                  \
         ctb_log_warning_inline(__FILE__, __LINE__, __func__, ctb_warning, msg);        \
@@ -39,7 +39,7 @@
  *
  * \param[in] msg Message.
  */
-#define CTB_LOG_MESSAGE_INLINE(msg)                                                    \
+#define LOG_MESSAGE_INLINE(msg)                                                        \
     do                                                                                 \
     {                                                                                  \
         ctb_log_message_inline(__FILE__, __LINE__, __func__, msg);                     \
@@ -53,7 +53,7 @@
  * \param[in] msg Error message.
  * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_ERROR_INLINE_FMT(ctb_error, msg, ...)                                  \
+#define LOG_ERROR_INLINE_FMT(ctb_error, msg, ...)                                      \
     do                                                                                 \
     {                                                                                  \
         ctb_log_error_inline_fmt(                                                      \
@@ -69,7 +69,7 @@
  * \param[in] msg Warning message.
  * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_WARNING_INLINE_FMT(ctb_warning, msg, ...)                              \
+#define LOG_WARNING_INLINE_FMT(ctb_warning, msg, ...)                                  \
     do                                                                                 \
     {                                                                                  \
         ctb_log_warning_inline_fmt(                                                    \
@@ -83,51 +83,7 @@
  * \param[in] msg Warning message.
  * \param[in] ... Additional arguments for formatting the message.
  */
-#define CTB_LOG_MESSAGE_INLINE_FMT(msg, ...)                                           \
-    do                                                                                 \
-    {                                                                                  \
-        ctb_log_message_inline_fmt(__FILE__, __LINE__, __func__, msg, __VA_ARGS__);    \
-    } while (0)
-
-/**
- * \brief Wrapper for logging an error with formatted message to stderr without
- * stacktrace.
- *
- * \param[in] ctb_error The error type.
- * \param[in] msg Error message.
- * \param[in] ... Additional arguments for formatting the message.
- */
-#define CTB_LOG_ERROR_INLINE_FMT(ctb_error, msg, ...)                                  \
-    do                                                                                 \
-    {                                                                                  \
-        ctb_log_error_inline_fmt(                                                      \
-            __FILE__, __LINE__, __func__, ctb_error, msg, __VA_ARGS__                  \
-        );                                                                             \
-    } while (0)
-
-/**
- * \brief Wrapper for logging a warning with formatted message to stderr without
- * stacktrace.
- *
- * \param[in] ctb_warning The warning type.
- * \param[in] msg Warning message.
- * \param[in] ... Additional arguments for formatting the message.
- */
-#define CTB_LOG_WARNING_INLINE_FMT(ctb_warning, msg, ...)                              \
-    do                                                                                 \
-    {                                                                                  \
-        ctb_log_warning_inline_fmt(                                                    \
-            __FILE__, __LINE__, __func__, ctb_warning, msg, __VA_ARGS__                \
-        );                                                                             \
-    } while (0)
-
-/**
- * \brief Wrapper for logging a formatted message to stdout without stacktrace.
- *
- * \param[in] msg Warning message.
- * \param[in] ... Additional arguments for formatting the message.
- */
-#define CTB_LOG_MESSAGE_INLINE_FMT(msg, ...)                                           \
+#define LOG_MESSAGE_INLINE_FMT(msg, ...)                                               \
     do                                                                                 \
     {                                                                                  \
         ctb_log_message_inline_fmt(__FILE__, __LINE__, __func__, msg, __VA_ARGS__);    \

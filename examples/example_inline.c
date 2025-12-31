@@ -29,7 +29,7 @@ int main(void)
 
 void inline_error(int i)
 {
-    CTB_LOG_ERROR_INLINE_FMT(
+    LOG_ERROR_INLINE_FMT(
         CTB_ARITHMETIC_ERROR,
         "(Test %d) This should be inline formatted error level 1 with arithmetic error",
         i
@@ -46,12 +46,12 @@ void inline_error_level2(int i)
         "(Test %d) This should be inline error level 2 with buffer error",
         i
     );
-    CTB_LOG_ERROR_INLINE(CTB_BUFFER_ERROR, message);
+    LOG_ERROR_INLINE(CTB_BUFFER_ERROR, message);
 }
 
 void inline_warning(int i)
 {
-    CTB_LOG_WARNING_INLINE_FMT(
+    LOG_WARNING_INLINE_FMT(
         CTB_DEPRECATION_WARNING,
         "(Test %d) This should be inline formatted warning level 1 with deprecation "
         "warning",
@@ -69,12 +69,12 @@ void inline_warning_level2(int i)
         "(Test %d) This should be inline warning level 2 with user warning",
         i
     );
-    CTB_LOG_WARNING_INLINE(CTB_USER_WARNING, message);
+    LOG_WARNING_INLINE(CTB_USER_WARNING, message);
 }
 
 void inline_message(int i)
 {
-    CTB_LOG_MESSAGE_INLINE_FMT(
+    LOG_MESSAGE_INLINE_FMT(
         "(Test %d) This should be inline formatted message level 1", i
     );
     inline_message_level2(i + 1);
@@ -89,5 +89,5 @@ void inline_message_level2(int i)
         "(Test %d) This should be inline message level 2",
         i
     );
-    CTB_LOG_MESSAGE_INLINE(message);
+    LOG_MESSAGE_INLINE(message);
 }
