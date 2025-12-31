@@ -8,11 +8,11 @@
 
 #include "internal/context.h"
 
-static CTB_Context traceback_context = {0};
+static CTB_Context ctb_traceback_context = {0};
 
 CTB_Context *get_context(void)
 {
-    return &traceback_context;
+    return &ctb_traceback_context;
 }
 
 void ctb_push_call_stack_frame(

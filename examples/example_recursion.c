@@ -2,7 +2,7 @@
 
 #include "c_traceback.h"
 
-#define N 2
+#define N 100
 
 void recursion(int count)
 {
