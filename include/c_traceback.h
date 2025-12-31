@@ -11,8 +11,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "c_traceback/color_codes.h"
 #include "c_traceback/log_inline.h"
-#include "c_traceback_colors.h"
 #include "c_traceback_errors.h"
 #include "config.h"
 

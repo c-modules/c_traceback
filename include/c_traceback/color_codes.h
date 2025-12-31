@@ -1,12 +1,12 @@
 /**
- * \file c_traceback_colors.h
+ * \file color_codes.h
  * \brief ANSI color codes for C traceback and error messages.
  *
  * \author Ching-Yin NG
  */
 
-#ifndef C_TRACEBACK_COLORS_H
-#define C_TRACEBACK_COLORS_H
+#ifndef C_TRACEBACK_COLOR_CODES_H
+#define C_TRACEBACK_COLOR_CODES_H
 
 // clang-format off
 #define CTB_RESET_COLOR "\033[0m"                           // Reset to normal text
@@ -33,4 +33,4 @@
 #define CTB_TRACEBACK_ANOTHER_EXCEPTION_COLOR ""            // White / text color
 // clang-format on
 
-#endif /* C_TRACEBACK_COLORS_H */
+#endif /* C_TRACEBACK_COLOR_CODES_H */

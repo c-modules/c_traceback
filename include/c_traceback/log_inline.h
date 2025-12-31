@@ -5,8 +5,8 @@
  * \author Ching-Yin Ng
  */
 
-#ifndef LOG_INLINE_H
-#define LOG_INLINE_H
+#ifndef C_TRACEBACK_LOG_INLINE_H
+#define C_TRACEBACK_LOG_INLINE_H
 
 #include "c_traceback_errors.h"
 
@@ -193,4 +193,4 @@ void ctb_log_message_inline_fmt(
     ...
 );
 
-#endif // LOG_INLINE_H
+#endif // C_TRACEBACK_LOG_INLINE_H
