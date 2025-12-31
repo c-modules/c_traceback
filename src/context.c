@@ -41,25 +41,11 @@ void ctb_push_call_stack_frame(
     context->call_depth++;
 }
 
-void ctb_pop_call_stack_frame(
-    const char *file, const char *func, const int line, const char *source_code
-)
+void ctb_pop_call_stack_frame(void)
 {
     CTB_Context *context = get_context();
-    if (context->call_depth <= 0)
+    if (context->call_depth > 0)
     {
-        return;
+        (context->call_depth)--;
     }
-
-    (context->call_depth)--;
-    if (context->call_depth <= CTB_MAX_CALL_STACK_DEPTH)
-    {
-        return;
-    }
-
-    CTB_Frame_ *frame = &context->call_stack_frames[CTB_MAX_CALL_STACK_DEPTH - 1];
-    frame->filename = file;
-    frame->function_name = func;
-    frame->line_number = line;
-    frame->source_code = source_code;
 }

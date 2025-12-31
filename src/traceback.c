@@ -108,7 +108,7 @@ void ctb_log_error_traceback(void)
             const int num_frames = snapshot->call_depth;
             const bool num_frames_exceed_max = (num_frames > CTB_MAX_CALL_STACK_DEPTH);
             const int num_frames_to_print =
-                num_frames_exceed_max ? (CTB_MAX_CALL_STACK_DEPTH - 1) : num_frames;
+                num_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
 
             fprintf(
                 stream,
@@ -133,13 +133,9 @@ void ctb_log_error_traceback(void)
                     num_frames - CTB_MAX_CALL_STACK_DEPTH,
                     color_reset
                 );
-                print_frame(
-                    stream,
-                    num_frames - 1,
-                    &snapshot->call_stack_frames[CTB_MAX_CALL_STACK_DEPTH - 1],
-                    use_color
-                );
             }
+
+            print_frame(stream, num_frames, &snapshot->error_frame, use_color);
 
             fprintf(
                 stream,

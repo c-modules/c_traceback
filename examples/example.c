@@ -13,7 +13,7 @@ int main(void)
     double *vec = malloc(N * sizeof(double));
     if (!vec)
     {
-        ctb_raise_error(CTB_MEMORY_ERROR, "Failed to allocate memory");
+        RAISE_ERROR(CTB_MEMORY_ERROR, "Failed to allocate memory", 123);
         goto error;
     }
 
@@ -49,7 +49,7 @@ static void division_vec(double *vec, double denominator)
 {
     if (denominator == 0)
     {
-        ctb_raise_error(
+        RAISE_ERROR(
             CTB_VALUE_ERROR, "Denominator must be nonzero! Received: %lf", denominator
         );
         return;

@@ -12,7 +12,14 @@
 
 #include "internal/context.h"
 
-void ctb_raise_error(CTB_Error error, const char *restrict msg, ...)
+void ctb_raise_error(
+    CTB_Error error,
+    const char *restrict file,
+    const int line,
+    const char *restrict func,
+    const char *restrict msg,
+    ...
+)
 {
     CTB_Context *context = get_context();
     (context->num_errors)++;
@@ -24,11 +31,22 @@ void ctb_raise_error(CTB_Error error, const char *restrict msg, ...)
             &(context->error_snapshots[num_errors - 1]);
         error_snapshot->error = error;
         error_snapshot->call_depth = context->call_depth;
-        memcpy(
-            error_snapshot->call_stack_frames,
-            context->call_stack_frames,
-            sizeof(CTB_Frame_) * CTB_MAX_CALL_STACK_DEPTH
-        );
+        error_snapshot->error_frame.filename = file;
+        error_snapshot->error_frame.line_number = line;
+        error_snapshot->error_frame.function_name = func;
+        error_snapshot->error_frame.source_code = "<Error raised here>";
+
+        const int min_depth = (context->call_depth < CTB_MAX_CALL_STACK_DEPTH)
+                                  ? context->call_depth
+                                  : CTB_MAX_CALL_STACK_DEPTH;
+        if (min_depth > 0)
+        {
+            memcpy(
+                error_snapshot->call_stack_frames,
+                context->call_stack_frames,
+                sizeof(CTB_Frame_) * min_depth
+            );
+        }
 
         va_list args;
         va_start(args, msg);

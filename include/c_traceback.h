@@ -25,7 +25,7 @@
 #define TRACE(expr)                                                                    \
     (ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr),                   \
      (expr),                                                                           \
-     ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr),                    \
+     ctb_pop_call_stack_frame(),                                                       \
      !ctb_check_error_occurred())
 
 /**
@@ -39,7 +39,7 @@
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
         (expr);                                                                        \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                 \
+        ctb_pop_call_stack_frame();                                                    \
     } while (0)
 
 /**
@@ -52,7 +52,20 @@
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
         __VA_ARGS__                                                                    \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          \
+        ctb_pop_call_stack_frame();                                                    \
+    } while (0)
+
+/**
+ * \brief Wrapper for raising an error with the current call stack.
+ *
+ * \param[in] ctb_error The error type.
+ * \param[in] msg Error message.
+ * \param[in] ... Additional arguments for formatting the message.
+ */
+#define RAISE_ERROR(ctb_error, msg, ...)                                               \
+    do                                                                                 \
+    {                                                                                  \
+        ctb_raise_error(ctb_error, __FILE__, __LINE__, __func__, msg, __VA_ARGS__);    \
     } while (0)
 
 /**
@@ -67,7 +80,7 @@
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
         (expr);                                                                        \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                 \
+        ctb_pop_call_stack_frame();                                                    \
         if (ctb_check_error_occurred())                                                \
         {                                                                              \
             goto label;                                                                \
@@ -86,7 +99,7 @@
     {                                                                                  \
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
         __VA_ARGS__                                                                    \
-        ctb_pop_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);          \
+        ctb_pop_call_stack_frame();                                                    \
         if (ctb_check_error_occurred())                                                \
         {                                                                              \
             goto label;                                                                \
@@ -148,14 +161,8 @@ void ctb_push_call_stack_frame(
 
 /**
  * \brief Pop the top call stack frame.
- * \param[in] file File where the function is called.
- * \param[in] func Function name where the function is called.
- * \param[in] line Line number where the function is called.
- * \param[in] source_code Source code of the function call.
  */
-void ctb_pop_call_stack_frame(
-    const char *file, const char *func, const int line, const char *source_code
-);
+void ctb_pop_call_stack_frame(void);
 
 /**
  * \brief Log error message to stderr without stacktrace.
@@ -216,10 +223,20 @@ void ctb_log_message_inline(
  * \brief Raise an error with the current call stack.
  *
  * \param[in] error The error type.
+ * \param[in] file File where the message is sent.
+ * \param[in] line Line number where the message is sent.
+ * \param[in] func Function where the message is sent.
  * \param[in] msg Error message.
  * \param[in] ... Additional arguments for formatting the message.
  */
-void ctb_raise_error(CTB_Error error, const char *restrict msg, ...);
+void ctb_raise_error(
+    CTB_Error error,
+    const char *restrict file,
+    const int line,
+    const char *restrict func,
+    const char *restrict msg,
+    ...
+);
 
 /**
  * \brief Check if any error has occurred.
