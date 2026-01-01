@@ -18,9 +18,18 @@
 #include "c_traceback/traceback.h"
 #include "c_traceback_errors.h"
 
-/* Traceback prefix (i.e. the string that appears before "Traceback") */
-// You can put your project name here, like "MyApp"
-#define CTB_TRACEBACK_PREFIX ""
+/**
+ * Traceback header
+ * (i.e. the title printed at the top of the traceback output
+ * before "(most recent call last)"). It will be highlighted in
+ * bold.
+ * 
+ * You can change this value to customize the header, e.g. 
+ * "MyApp Traceback"
+ * 
+ * If its value is NULL or an empty string, "Traceback" will be used.
+ */
+#define CTB_TRACEBACK_HEADER ""
 
 // Maximum number of call stack frames
 #define CTB_MAX_CALL_STACK_DEPTH 32
