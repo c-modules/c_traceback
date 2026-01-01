@@ -18,6 +18,10 @@
 #include "c_traceback/traceback.h"
 #include "c_traceback_errors.h"
 
+/* Traceback prefix (i.e. the string that appears before "Traceback") */
+// You can put your project name here, like "MyApp"
+#define CTB_TRACEBACK_PREFIX ""
+
 // Maximum number of call stack frames
 #define CTB_MAX_CALL_STACK_DEPTH 32
 

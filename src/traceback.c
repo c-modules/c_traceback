@@ -135,14 +135,29 @@ void ctb_log_error_traceback(void)
             const int num_frames_to_print =
                 num_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
 
-            fprintf(
-                stream,
-                "\n%sTraceback%s %s(most recent call last):%s\n",
-                color_error_bold,
-                color_reset,
-                color_error,
-                color_reset
-            );
+            if (CTB_TRACEBACK_PREFIX != NULL && CTB_TRACEBACK_PREFIX[0] != '\0')
+            {
+                fprintf(
+                    stream,
+                    "\n%s%s Traceback%s %s(most recent call last):%s\n",
+                    color_error_bold,
+                    CTB_TRACEBACK_PREFIX,
+                    color_reset,
+                    color_error,
+                    color_reset
+                );
+            }
+            else
+            {
+                fprintf(
+                    stream,
+                    "\n%sTraceback%s %s(most recent call last):%s\n",
+                    color_error_bold,
+                    color_reset,
+                    color_error,
+                    color_reset
+                );
+            }
 
             for (int i = 0; i < num_frames_to_print; i++)
             {
