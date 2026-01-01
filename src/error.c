@@ -69,7 +69,7 @@ void ctb_raise_error(
             &(context->error_snapshots[num_errors - 1]);
         ctb_setup_error_snapshot_core(context, error_snapshot, error, file, line, func);
 
-        snprintf(error_snapshot->error_message, CTB_MAX_ERROR_MESSAGE_LENGTH, msg);
+        snprintf(error_snapshot->error_message, CTB_MAX_ERROR_MESSAGE_LENGTH, "%s", msg);
     }
 }
 
