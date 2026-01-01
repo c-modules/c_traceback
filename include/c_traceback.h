@@ -27,4 +27,14 @@
 // Maximum length of error message
 #define CTB_MAX_ERROR_MESSAGE_LENGTH 256
 
+// Terminal width when it cannot be determined
+#define CTB_DEFAULT_TERMINAL_WIDTH 80
+
+// Output width when printing to file
+#define CTB_FILE_OUTPUT_WIDTH 120
+
+// Separator length
+#define CTB_SEPARATOR_MAX_LENGTH 120
+#define CTB_SEPARATOR_MIN_LENGTH 50
+
 #endif /* C_TRACEBACK_H */

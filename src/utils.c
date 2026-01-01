@@ -19,6 +19,7 @@
 #define ISATTY _isatty
 #define FILENO _fileno
 #else
+#include <sys/ioctl.h>
 #include <unistd.h>
 #define ISATTY isatty
 #define FILENO fileno
@@ -120,6 +121,44 @@ int get_parent_path_length(const char *restrict path)
     {
         return (int)(last_separator - path);
     }
+}
+
+int get_terminal_width(FILE *stream)
+{
+    if (!stream)
+    {
+        return CTB_FILE_OUTPUT_WIDTH;
+    }
+
+#ifdef _WIN32
+    const int fd = FILENO(stream);
+    HANDLE hFile = (HANDLE)_get_osfhandle(fd);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    if (hFile != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(hFile, &csbi))
+    {
+        return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    }
+#else
+    struct winsize w;
+    const int fd = FILENO(stream);
+
+    if (ioctl(fd, TIOCGWINSZ, &w) != -1)
+    {
+        return w.ws_col;
+    }
+#endif
+
+    /* Fallback */
+
+    // Check COLUMNS environment variable
+    const char *env_cols = getenv("COLUMNS");
+    if (env_cols)
+    {
+        return atoi(env_cols);
+    }
+
+    return CTB_DEFAULT_TERMINAL_WIDTH;
 }
 
 const char *error_to_string(CTB_Error error)

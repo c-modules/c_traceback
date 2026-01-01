@@ -30,6 +30,14 @@ bool should_use_color(FILE *stream);
 int get_parent_path_length(const char *restrict path);
 
 /**
+ * \brief Get the width of the terminal for the given output stream.
+ *
+ * \param[in] stream The output stream (e.g., stdout, stderr), or NULL for files.
+ * \return The width of the terminal in characters.
+ */
+int get_terminal_width(FILE *stream);
+
+/**
  * \brief Convert error type to its corresponding string representation.
  *
  * \param[in] error The error type to convert.

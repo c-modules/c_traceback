@@ -74,6 +74,26 @@ print_frame(FILE *stream, int index, const CTB_Frame_ *frame, bool use_color)
     // clang-format on
 }
 
+static void print_separator(FILE *stream, bool use_color)
+{
+    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
+    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
+
+    const int terminal_width = get_terminal_width(stream);
+    const int max = CTB_SEPARATOR_MAX_LENGTH;
+    const int min = CTB_SEPARATOR_MIN_LENGTH;
+    const int separator_width = (terminal_width < min)   ? min
+                                : (terminal_width > max) ? max
+                                                         : terminal_width;
+
+    fprintf(stream, "%s", color_error);
+    for (int i = 0; i < separator_width; i++)
+    {
+        fputc('-', stream);
+    }
+    fprintf(stream, "%s", color_reset);
+}
+
 void ctb_log_error_traceback(void)
 {
     const CTB_Context *context = get_context();
@@ -93,12 +113,7 @@ void ctb_log_error_traceback(void)
     const char *color_another_exception =
         use_color ? CTB_TRACEBACK_ANOTHER_EXCEPTION_COLOR : "";
 
-    fprintf(
-        stream,
-        "%s--------------------------------------------------%s",
-        color_error,
-        color_reset
-    );
+    print_separator(stream, use_color);
 
     if (num_errors_to_print > 0)
     {
@@ -165,12 +180,8 @@ void ctb_log_error_traceback(void)
         fputs("There is no recorded error!\n", stream);
     }
 
-    fprintf(
-        stream,
-        "%s--------------------------------------------------%s\n",
-        color_error,
-        color_reset
-    );
+    print_separator(stream, use_color);
+    fputc('\n', stream);
     fflush(stream);
 }
 
