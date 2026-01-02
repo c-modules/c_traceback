@@ -48,7 +48,7 @@
 #define CTB_DEFAULT_TERMINAL_WIDTH 80
 
 // Output width when printing to file
-#define CTB_FILE_OUTPUT_WIDTH 120
+#define CTB_DEFAULT_FILE_WIDTH 120
 
 // Horizontal rule width
 #define CTB_HRULE_MAX_WIDTH 120

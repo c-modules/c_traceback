@@ -366,6 +366,12 @@ void ctb_print_compilation_info(void)
     FILE *const stream = stdout;
     const bool use_color = should_use_color(stream);
     const char *dash = should_use_utf8(stream) ? "\u2500" : "-";
+    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
+    const char *color_error_bold = use_color ? CTB_ERROR_BOLD_COLOR : "";
+    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
+    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
+    // const char *color_another_exception =
+    //     use_color ? CTB_TRACEBACK_ANOTHER_EXCEPTION_TEXT_COLOR : "";
 
     // int terminal_width;
     // {
@@ -403,7 +409,7 @@ void ctb_print_compilation_info(void)
     // Sorry, but right now its hard-coded, and without
     // terminal width calculation for wrapping.
     int current_line = 0;
-    const int total_items = 15;
+    const int total_items = 14;
     for (int i = 0; i < total_items; i++)
     {
         print_compilation_info_left_column(
@@ -502,8 +508,8 @@ void ctb_print_compilation_info(void)
         }
         else if (i == 11)
         {
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "File Output Width: ");
-            fprintf(stream, "%d", CTB_FILE_OUTPUT_WIDTH);
+            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Default File Width: ");
+            fprintf(stream, "%d", CTB_DEFAULT_FILE_WIDTH);
         }
         else if (i == 12)
         {
@@ -539,6 +545,87 @@ void ctb_print_compilation_info(void)
         fprintf(stream, "\n");
         current_line++;
     }
+
+    /* Sample inline logging */
+    fputs("\n", stream);
+    print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Inline logging (example)\n");
+    for (int d = 0; d < 24; d++)
+    {
+        fputs(dash, stream);
+    }
+    fputs("\n", stream);
+    LOG_ERROR_INLINE(CTB_BASE_EXCEPTION, "Sample error for compilation info");
+    LOG_WARNING_INLINE(CTB_USER_WARNING, "Sample warning for compilation info");
+    LOG_MESSAGE_INLINE("Sample info for compilation info");
+
+    /* Sample Traceback */
+    const int num_examples = 3;
+    const CTB_Frame_ example_frames[3] = {
+        {10, "example/example.c", "main", "hello_world();"},
+        {25, "example/hello_world.c", "check_terminal", "data = compute(data)"},
+        {50, "example/libs/utils.c", "compute", "recursion()"}
+    };
+
+    const CTB_Frame_ error_frame = {
+        75, "example/libs/utils.c", "recursion", "<error raised here>"
+    };
+
+    fputs("\n", stream);
+    print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Traceback (example)\n");
+    for (int d = 0; d < 19; d++)
+    {
+        fputs(dash, stream);
+    }
+    fputs("\n", stream);
+
+    if (CTB_TRACEBACK_HEADER != NULL && CTB_TRACEBACK_HEADER[0] != '\0')
+    {
+        fprintf(
+            stream,
+            "%s%s%s %s(most recent call last):%s\n",
+            color_error_bold,
+            CTB_TRACEBACK_HEADER,
+            color_reset,
+            color_error,
+            color_reset
+        );
+    }
+    else
+    {
+        fprintf(
+            stream,
+            "%sTraceback%s %s(most recent call last):%s\n",
+            color_error_bold,
+            color_reset,
+            color_error,
+            color_reset
+        );
+    }
+
+    for (int i = 0; i < num_examples; i++)
+    {
+        print_frame(stream, i, &example_frames[i], use_color);
+    }
+
+    fprintf(
+        stream,
+        "\n      %s[... Skipped %d frames ...]%s\n\n",
+        color_traceback_text,
+        123,
+        color_reset
+    );
+
+    print_frame(stream, 127, &error_frame, use_color);
+    fprintf(
+        stream,
+        "%s%s:%s %s%s%s\n",
+        color_error_bold,
+        error_to_string(CTB_EXCEPTION),
+        color_reset,
+        color_error,
+        "Something went wrong!",
+        color_reset
+    );
 
     print_hrule_with_header(stream, use_color, CTB_THEME_COLOR, "END");
     fflush(stream);

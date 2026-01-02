@@ -210,7 +210,7 @@ int get_terminal_width(FILE *stream)
 {
     if (!stream)
     {
-        return CTB_FILE_OUTPUT_WIDTH;
+        return CTB_DEFAULT_FILE_WIDTH;
     }
 
 #ifdef _WIN32
