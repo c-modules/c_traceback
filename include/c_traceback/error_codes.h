@@ -18,7 +18,6 @@
     ├── SignalError
     │    ├── SignalAbort
     │    ├── SignalSegmentationFault
-    │    ├── SignalStackOverflow
     │    ├── SignalInvalidInstruction
     │    ├── SignalTermination
     │    ├── SignalFloatingPointException
@@ -93,7 +92,6 @@ typedef enum CTB_Error
     CTB_SIGNAL_ERROR = 50,
     CTB_SIGNAL_ABORT,
     CTB_SIGNAL_SEGMENTATION_FAULT,
-    CTB_SIGNAL_STACK_OVERFLOW,
     CTB_SIGNAL_INVALID_INSTRUCTION,
     CTB_SIGNAL_TERMINATION,
     CTB_SIGNAL_FLOATING_POINT_EXCEPTION,

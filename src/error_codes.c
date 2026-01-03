@@ -25,7 +25,6 @@ const char *error_to_string(CTB_Error error)
         case CTB_SIGNAL_ERROR:                  return "SignalError";
         case CTB_SIGNAL_ABORT:                  return "SignalAbort";
         case CTB_SIGNAL_SEGMENTATION_FAULT:     return "SignalSegmentationFault";
-        case CTB_SIGNAL_STACK_OVERFLOW:         return "SignalStackOverflow";
         case CTB_SIGNAL_INVALID_INSTRUCTION:    return "SignalInvalidInstruction";
         case CTB_SIGNAL_TERMINATION:            return "SignalTermination";
         case CTB_SIGNAL_FLOATING_POINT_EXCEPTION: return "SignalFloatingPointException";

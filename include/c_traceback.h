@@ -15,6 +15,7 @@
 #include "c_traceback/error.h"
 #include "c_traceback/error_codes.h"
 #include "c_traceback/log_inline.h"
+#include "c_traceback/signal_handler.h"
 #include "c_traceback/trace.h"
 #include "c_traceback/traceback.h"
 

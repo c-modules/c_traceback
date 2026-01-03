@@ -18,4 +18,11 @@ void ctb_log_error_traceback(void);
  */
 void ctb_dump_traceback(void);
 
+/**
+ * \brief Dump the traceback to stderr on signal error.
+ *
+ * \param[in] ctb_error Error type.
+ */
+void ctb_dump_traceback_signal(const CTB_Error ctb_error);
+
 #endif /* C_TRACEBACK_TRACEBACK_H */

@@ -21,6 +21,7 @@ add_library(c_traceback STATIC
     src/trace.c
     src/traceback.c
     src/utils.c
+    src/signal_handler.c
 )
 add_library(c_traceback::c_traceback ALIAS c_traceback)
 

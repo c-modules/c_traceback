@@ -13,6 +13,16 @@
 #include "internal/trace.h"
 #include "internal/utils.h"
 
+#if defined(_WIN32)
+#include <io.h>
+#define SAFE_WRITE(fd, buf, len) _write(fd, buf, len)
+#define STDERR_FD 2
+#else
+#include <unistd.h>
+#define SAFE_WRITE(fd, buf, len) write(fd, buf, len)
+#define STDERR_FD STDERR_FILENO
+#endif
+
 typedef struct
 {
     const char *reset;
@@ -231,6 +241,10 @@ void ctb_log_error_traceback(void)
     const bool use_color = should_use_color(stream);
     const Theme theme = get_theme(use_color);
 
+    const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
+                                  ? CTB_TRACEBACK_HEADER
+                                  : "Traceback";
+
     const int num_errors = context->num_errors;
     const int num_errors_to_print =
         (num_errors > CTB_MAX_NUM_ERROR) ? CTB_MAX_NUM_ERROR : num_errors;
@@ -254,13 +268,9 @@ void ctb_log_error_traceback(void)
             stack_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
 
         /* Print Header */
-        const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
-                                      ? CTB_TRACEBACK_HEADER
-                                      : "Traceback";
-
         if (num_errors > 1)
         {
-            fprintf(stream, "%s(#%02d)%s ", theme.error, e + 1, theme.reset);
+            fprintf(stream, "%s(#%02d)%s ", theme.error, e, theme.reset);
         }
 
         fprintf(
@@ -292,16 +302,23 @@ void ctb_log_error_traceback(void)
 
         print_frame(stream, num_frames, &snapshot->error_frame, &theme);
 
-        fprintf(
-            stream,
-            "%s%s:%s %s%s%s\n",
-            theme.error_bold,
-            error_to_string(snapshot->error),
-            theme.reset,
-            theme.error,
-            snapshot->error_message,
-            theme.reset
-        );
+        fprintf(stream, "%s%s", theme.error_bold, error_to_string(snapshot->error));
+        if (snapshot->error_message[0])
+        {
+            fprintf(
+                stream,
+                ":%s %s%s%s",
+                theme.reset,
+                theme.error,
+                snapshot->error_message,
+                theme.reset
+            );
+        }
+        else
+        {
+            fputs(theme.reset, stream);
+        }
+        fputs("\n", stream);
 
         if (e < (num_errors_to_print - 1))
         {
@@ -565,4 +582,227 @@ void ctb_print_compilation_info(void)
 
     print_hrule_with_header(stream, use_color, CTB_THEME_COLOR, "END");
     fflush(stream);
+}
+
+/**
+ * \brief Async-signal-safe string writer.
+ */
+static void safe_print_str(const char *string)
+{
+    if (!string)
+    {
+        return;
+    }
+    size_t len = 0;
+    while (string[len])
+    {
+        len++;
+    }
+    SAFE_WRITE(STDERR_FD, string, (unsigned int)len);
+}
+
+/**
+ * \brief Async-signal-safe integer writer (converts int to string).
+ */
+static void safe_print_int(int n)
+{
+    char buffer[32];
+    int i = 0;
+    int is_neg = 0;
+
+    if (n == 0)
+    {
+        safe_print_str("0");
+        return;
+    }
+
+    if (n < 0)
+    {
+        is_neg = 1;
+        n = -n;
+    }
+
+    while (n > 0)
+    {
+        buffer[i++] = (n % 10) + '0';
+        n /= 10;
+    }
+
+    if (is_neg)
+    {
+        buffer[i++] = '-';
+    }
+
+    // Reverse buffer to print
+    for (int j = 0; j < i / 2; j++)
+    {
+        char temp = buffer[j];
+        buffer[j] = buffer[i - j - 1];
+        buffer[i - j - 1] = temp;
+    }
+    buffer[i] = '\0';
+
+    SAFE_WRITE(STDERR_FD, buffer, (unsigned int)i);
+}
+
+/**
+ * \brief Async-signal-safe helper function to print a single frame.
+ *
+ * \param[in] index The index of the frame in the call stack.
+ * \param[in] frame The frame to print.
+ */
+static void safe_print_frame(int index, const CTB_Frame_ *frame)
+{
+    safe_print_str("  (#");
+    if (index < 10)
+    {
+        safe_print_str("0");
+    }
+    safe_print_int(index);
+    safe_print_str(") File \"");
+    safe_print_str(frame->filename);
+    safe_print_str("\", line ");
+    safe_print_int(frame->line_number);
+    safe_print_str(" in ");
+    safe_print_str(frame->function_name);
+    safe_print_str(":\n    ");
+    safe_print_str(frame->source_code);
+    safe_print_str("\n");
+}
+
+void ctb_dump_traceback_signal(const CTB_Error ctb_error)
+{
+    CTB_Context *context = get_context();
+    if (!context)
+    {
+        safe_print_str("Critical Error: Could not access thread context.\n");
+        return;
+    }
+
+    const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
+                                  ? CTB_TRACEBACK_HEADER
+                                  : "Traceback";
+
+    const int num_errors = context->num_errors;
+    const int num_errors_to_print =
+        (num_errors > CTB_MAX_NUM_ERROR) ? CTB_MAX_NUM_ERROR : num_errors;
+
+    safe_print_str("\n");
+    // Red Bold
+    for (int i = 0; i < CTB_DEFAULT_TERMINAL_WIDTH; i++)
+    {
+        safe_print_str("-");
+    }
+    safe_print_str("\n");
+
+    for (int e = 0; e < num_errors_to_print; e++)
+    {
+        CTB_Error_Snapshot_ *snapshot = &context->error_snapshots[e];
+        const int num_frames = snapshot->call_depth;
+        const bool stack_frames_exceed_max = (num_frames > CTB_MAX_CALL_STACK_DEPTH);
+        const int num_frames_to_print =
+            stack_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
+
+        /* Print Header */
+        if (num_errors > 1)
+        {
+            safe_print_str("(#");
+            if (e < 10)
+            {
+                safe_print_str("0");
+            }
+            safe_print_int(e);
+            safe_print_str(") ");
+        }
+
+        safe_print_str(header_text);
+        safe_print_str(" (most recent call last):\n");
+
+        /* Print Stack Frames */
+        for (int i = 0; i < num_frames_to_print; i++)
+        {
+            safe_print_frame(i, &snapshot->call_stack_frames[i]);
+        }
+
+        if (stack_frames_exceed_max)
+        {
+            safe_print_str("\n      [... Skipped ");
+            safe_print_int(num_frames - CTB_MAX_CALL_STACK_DEPTH);
+            safe_print_str(" frames ...]\n\n");
+        }
+
+        if (e != num_errors_to_print)
+        {
+            safe_print_frame(num_frames, &snapshot->error_frame);
+        }
+
+        /* Print Error Message */
+        safe_print_str(error_to_string(snapshot->error));
+        if (snapshot->error_message[0])
+        {
+            safe_print_str(": ");
+            safe_print_str(snapshot->error_message);
+        }
+
+        safe_print_str("\n\nDuring handling of the above exception, another exception "
+                       "occurred:\n\n");
+    }
+
+    if (num_errors > CTB_MAX_NUM_ERROR)
+    {
+        safe_print_str("\n[... Truncated ");
+        safe_print_int(num_errors - CTB_MAX_NUM_ERROR);
+        safe_print_str(" errors ...]\n");
+    }
+
+    /* Print signal error*/
+    if (num_errors > 0)
+    {
+        safe_print_str("(#");
+        if (num_errors < 9)
+        {
+            safe_print_str("0");
+        }
+        safe_print_int(num_errors);
+        safe_print_str(") ");
+    }
+
+    safe_print_str(header_text);
+    safe_print_str(" (most recent call last):\n");
+
+    /* Print Stack Frames */
+    const int num_frames = context->call_depth;
+
+    if (num_frames <= 0)
+    {
+        safe_print_str("  [No recorded stack frames]\n");
+    }
+    else
+    {
+        const bool stack_frames_exceed_max = (num_frames > CTB_MAX_CALL_STACK_DEPTH);
+        const int num_frames_to_print =
+            stack_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
+
+        for (int i = 0; i < num_frames_to_print; i++)
+        {
+            safe_print_frame(i, &context->call_stack_frames[i]);
+        }
+
+        if (stack_frames_exceed_max)
+        {
+            safe_print_str("\n      [... Skipped ");
+            safe_print_int(num_frames - CTB_MAX_CALL_STACK_DEPTH);
+            safe_print_str(" frames ...]\n\n");
+        }
+    }
+
+    /* Print Signal Error Message */
+    safe_print_str(error_to_string(ctb_error));
+    safe_print_str("\n");
+
+    for (int i = 0; i < CTB_DEFAULT_TERMINAL_WIDTH; i++)
+    {
+        safe_print_str("-");
+    }
+    safe_print_str("\n");
 }
