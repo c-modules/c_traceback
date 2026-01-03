@@ -16,7 +16,7 @@
  * \param[in] ctb_error The error type.
  * \param[in] msg Error message.
  */
-#define RAISE_ERROR(ctb_error, msg)                                                    \
+#define THROW(ctb_error, msg)                                                          \
     do                                                                                 \
     {                                                                                  \
         ctb_raise_error(ctb_error, __FILE__, __LINE__, __func__, msg);                 \
@@ -30,7 +30,7 @@
  * \param[in] msg Error message.
  * \param[in] ... Additional arguments for formatting the message.
  */
-#define RAISE_ERROR_FMT(ctb_error, msg, ...)                                           \
+#define THROW_FMT(ctb_error, msg, ...)                                                 \
     do                                                                                 \
     {                                                                                  \
         ctb_raise_error_fmt(                                                           \

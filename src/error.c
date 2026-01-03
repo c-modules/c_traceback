@@ -36,7 +36,7 @@ static void ctb_setup_error_snapshot_core(
     error_snapshot->error_frame.filename = file;
     error_snapshot->error_frame.line_number = line;
     error_snapshot->error_frame.function_name = func;
-    error_snapshot->error_frame.source_code = "<Error raised here>";
+    error_snapshot->error_frame.source_code = "<Error thrown here>";
 
     const int min_depth = (context->call_depth < CTB_MAX_CALL_STACK_DEPTH)
                               ? context->call_depth

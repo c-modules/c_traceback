@@ -514,7 +514,7 @@ void ctb_print_compilation_info(void)
     };
 
     const CTB_Frame_ error_frame = {
-        75, "example/libs/utils.c", "recursion", "<error raised here>"
+        75, "example/libs/utils.c", "recursion", "<error thrown here>"
     };
 
     fputs("\n", stream);
