@@ -13,6 +13,75 @@
 #include "internal/trace.h"
 #include "internal/utils.h"
 
+typedef struct
+{
+    const char *reset;
+    const char *bold;
+    const char *error;
+    const char *error_bold;
+    const char *tb_text;
+    const char *tb_counter;
+    const char *tb_file;
+    const char *tb_line;
+    const char *tb_func;
+    const char *tb_another_exception;
+    const char *theme_bold;
+    const char *theme;
+} Theme;
+
+static const char *LOGO_LINES[] = {
+    "    %%%%%%%%%%%%    ",
+    "  %%%%%%%%%%%%%%%%  ",
+    " %%%%%%%%%%%%%%%%%% ",
+    "%%%%%%%%%%*  %%%%%%%",
+    "%%%%%%%*     %%%%%%%",
+    "%%%%%*       %%%%%%%",
+    "%%%%%%%*     %%%%%%%",
+    "%%%%%%%%%%*  %%%%%%%",
+    " %%%%%%%%%%%%%%%%%% ",
+    "  %%%%%%%%%%%%%%%%  ",
+    "    %%%%%%%%%%%%    "
+};
+
+/**
+ * \brief Populates the Theme struct based on color availability.
+ *
+ * \param[in] use_color Whether to use color in the output.
+ * \return The populated Theme struct.
+ */
+static Theme get_theme(bool use_color)
+{
+    if (!use_color)
+    {
+        return (Theme){"", "", "", "", "", "", "", "", "", "", "", ""};
+    }
+
+    return (Theme
+    ){.reset = CTB_RESET_COLOR,
+      .bold = CTB_THEME_BOLD_COLOR,
+      .error = CTB_ERROR_COLOR,
+      .error_bold = CTB_ERROR_BOLD_COLOR,
+      .tb_text = CTB_TRACEBACK_TEXT_COLOR,
+      .tb_counter = CTB_TRACEBACK_COUNTER_COLOR,
+      .tb_file = CTB_TRACEBACK_FILE_COLOR,
+      .tb_line = CTB_TRACEBACK_LINE_COLOR,
+      .tb_func = CTB_TRACEBACK_FUNC_COLOR,
+      .tb_another_exception = CTB_TRACEBACK_ANOTHER_EXCEPTION_TEXT_COLOR,
+      .theme_bold = CTB_THEME_BOLD_COLOR,
+      .theme = CTB_THEME_COLOR};
+}
+
+/**
+ * \brief Returns the appropriate dash character (UTF-8 or ASCII).
+ *
+ * \param[in] stream The output stream.
+ * \return The dash character as a string.
+ */
+static const char *get_dash(FILE *stream)
+{
+    return should_use_utf8(stream) ? "\u2500" : "-";
+}
+
 /**
  * \brief Helper function to print a single frame.
  *
@@ -22,123 +91,76 @@
  * \param[in] use_color Whether to use color in the output.
  */
 static void
-print_frame(FILE *stream, int index, const CTB_Frame_ *frame, bool use_color)
+print_frame(FILE *stream, int index, const CTB_Frame_ *frame, const Theme *theme)
 {
-    const char *color_traceback_counter = use_color ? CTB_TRACEBACK_COUNTER_COLOR : "";
-    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
-    const char *color_file = use_color ? CTB_TRACEBACK_FILE_COLOR : "";
-    const char *color_line = use_color ? CTB_TRACEBACK_LINE_COLOR : "";
-    const char *color_func = use_color ? CTB_TRACEBACK_FUNC_COLOR : "";
-    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
-    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
-
-    const char *filename = strrchr(frame->filename, '/');
+    const int dir_len = get_parent_path_length(frame->filename);
 
     // clang-format off
     fprintf(
         stream,
         "  %s(#%02d)%s %sFile \"%s",
-        color_traceback_counter, index, color_reset,
-        color_traceback_text, color_reset
+        theme->tb_counter, index, theme->reset,
+        theme->tb_text, theme->reset
     );
     // clang-format on
 
-    if (filename)
-    {
-        int dir_len = (int)(filename - frame->filename) + 1;
-        fprintf(
-            stream,
-            "%s%.*s%s",
-            color_traceback_text,
-            dir_len,
-            frame->filename,
-            color_reset
-        );
-        fprintf(stream, "%s%s%s", color_file, filename + 1, color_reset);
-    }
-    else
-    {
-        fprintf(stream, "%s%s%s", color_file, frame->filename, color_reset);
-    }
+    fprintf(stream, "%s%.*s%s", theme->tb_text, dir_len, frame->filename, theme->reset);
+    fprintf(stream, "%s%s%s", theme->tb_file, frame->filename + dir_len, theme->reset);
 
     // clang-format off
     fprintf(
         stream,
         "%s\", line%s %s%d%s %sin%s %s%s%s:\n    %s%s%s\n",
-        color_traceback_text, color_reset,
-        color_line, frame->line_number, color_reset,
-        color_traceback_text, color_reset,
-        color_func, frame->function_name, color_reset,
-        color_error, frame->source_code, color_reset
+        theme->tb_text, theme->reset,
+        theme->tb_line, frame->line_number, theme->reset,
+        theme->tb_text, theme->reset,
+        theme->tb_func, frame->function_name, theme->reset,
+        theme->error, frame->source_code, theme->reset
     );
     // clang-format on
 }
 
 /**
- * \brief Helper function to print a horizontal rule.
+ * \brief Helper function to print a horizontal rule with optional headers.
  *
  * \param[in] stream The output stream.
  * \param[in] use_color Whether to use color in the output.
- * \param[in] color The color code to use for the horizontal rule.
- */
-static void print_hrule(FILE *stream, bool use_color, const char *restrict color)
-{
-    const int terminal_width = get_terminal_width(stream);
-    const int max = CTB_HRULE_MAX_WIDTH;
-    const int min = CTB_HRULE_MIN_WIDTH;
-    const int separator_width = (terminal_width < min)   ? min
-                                : (terminal_width > max) ? max
-                                                         : terminal_width;
-    const char *dash = should_use_utf8(stream) ? "\u2500" : "-";
-
-    if (use_color)
-    {
-        fprintf(stream, "%s", color);
-    }
-
-    for (int i = 0; i < separator_width; i++)
-    {
-        fputs(dash, stream);
-    }
-
-    if (use_color)
-    {
-        fprintf(stream, "%s", CTB_RESET_COLOR);
-    }
-
-    fputs("\n", stream);
-}
-
-/**
- * \brief Helper function to print a horizontal rule with a header.
- *
- * \param[in] stream The output stream.
- * \param[in] use_color Whether to use color in the output.
- * \param[in] color The color code to use for the horizontal rule.
+ * \param[in] color_code The color code to use for the horizontal rule.
  * \param[in] header The header text to display in the middle of the rule.
  */
-static void print_hrule_with_header(
+static void print_hrule_internal(
     FILE *stream,
-    bool use_color,
-    const char *restrict color,
+    const bool use_color,
+    const char *restrict color_code,
     const char *restrict header
 )
 {
     const int terminal_width = get_terminal_width(stream);
     const int max = CTB_HRULE_MAX_WIDTH;
     const int min = CTB_HRULE_MIN_WIDTH;
-    const int separator_width = (terminal_width < min)   ? min
-                                : (terminal_width > max) ? max
-                                                         : terminal_width;
-    const char *dash = should_use_utf8(stream) ? "\u2500" : "-";
-    const int header_width = (int)strlen(header);
-    int left_width = 0;
+
+    int hrule_width = terminal_width;
+    if (hrule_width < min)
+    {
+        hrule_width = min;
+    }
+    else if (hrule_width > max)
+    {
+        hrule_width = max;
+    }
+
+    const char *dash = get_dash(stream);
+    const char *reset = use_color ? CTB_RESET_COLOR : "";
+    const char *color = (use_color && color_code) ? color_code : "";
+
+    int header_len = (header) ? (int)strlen(header) : 0;
+    int left_width = hrule_width;
     int right_width = 0;
 
-    if (header_width > 0)
+    if (header_len > 0)
     {
         const int padding = 2;
-        const int available_space = separator_width - header_width - padding;
+        const int available_space = hrule_width - header_len - padding;
 
         if (available_space > 0)
         {
@@ -151,158 +173,152 @@ static void print_hrule_with_header(
             right_width = 2;
         }
     }
-    else
-    {
-        // No label, print full line
-        left_width = separator_width;
-        right_width = 0;
-    }
 
-    if (use_color)
-    {
-        fprintf(stream, "%s", color);
-    }
+    fprintf(stream, "%s", color);
 
     for (int i = 0; i < left_width; i++)
     {
         fputs(dash, stream);
     }
 
-    fprintf(stream, " %s ", header);
+    if (header_len > 0)
+    {
+        fprintf(stream, " %s ", header);
+    }
 
     for (int i = 0; i < right_width; i++)
     {
         fputs(dash, stream);
     }
-
-    if (use_color)
-    {
-        fprintf(stream, "%s", CTB_RESET_COLOR);
-    }
-
-    fputs("\n", stream);
+    fprintf(stream, "%s\n", reset);
 }
 
 /**
- * \brief Helper function to print bold text.
+ * \brief Print a horizontal rule without a header.
  *
  * \param[in] stream The output stream.
  * \param[in] use_color Whether to use color in the output.
- * \param[in] color The color code to use for the bold text.
- * \param[in] text The text to print in bold.
+ * \param[in] color_code The color code to use for the horizontal rule.
  */
 static void
-print_bold(FILE *stream, bool use_color, const char *color, const char *text)
+print_hrule(FILE *stream, const bool use_color, const char *restrict color_code)
 {
-    if (use_color)
-    {
-        fprintf(stream, "%s%s%s", color, text, CTB_RESET_COLOR);
-    }
-    else
-    {
-        fputs(text, stream);
-    }
+    print_hrule_internal(stream, use_color, color_code, NULL);
+}
+
+/**
+ * \brief Print a horizontal rule with a header.
+ *
+ * \param[in] stream The output stream.
+ * \param[in] use_color Whether to use color in the output.
+ * \param[in] color_code The color code to use for the horizontal rule.
+ * \param[in] header The header text to display in the middle of the rule.
+ */
+static void print_hrule_with_header(
+    FILE *stream,
+    const bool use_color,
+    const char *restrict color_code,
+    const char *restrict header
+)
+{
+    print_hrule_internal(stream, use_color, color_code, header);
 }
 
 void ctb_log_error_traceback(void)
 {
     const CTB_Context *context = get_context();
-
     FILE *const stream = stderr;
     const bool use_color = should_use_color(stream);
+    const Theme theme = get_theme(use_color);
 
     const int num_errors = context->num_errors;
-    const bool num_errors_exceed_max = (num_errors > CTB_MAX_NUM_ERROR);
     const int num_errors_to_print =
-        num_errors_exceed_max ? CTB_MAX_NUM_ERROR : num_errors;
-
-    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
-    const char *color_error_bold = use_color ? CTB_ERROR_BOLD_COLOR : "";
-    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
-    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
-    const char *color_another_exception =
-        use_color ? CTB_TRACEBACK_ANOTHER_EXCEPTION_TEXT_COLOR : "";
+        (num_errors > CTB_MAX_NUM_ERROR) ? CTB_MAX_NUM_ERROR : num_errors;
 
     print_hrule(stream, use_color, CTB_ERROR_COLOR);
 
-    if (num_errors_to_print > 0)
-    {
-        for (int e = 0; e < num_errors_to_print; e++)
-        {
-            const CTB_Error_Snapshot_ *snapshot = &context->error_snapshots[e];
-            const int num_frames = snapshot->call_depth;
-            const bool num_frames_exceed_max = (num_frames > CTB_MAX_CALL_STACK_DEPTH);
-            const int num_frames_to_print =
-                num_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
-
-            if (CTB_TRACEBACK_HEADER != NULL && CTB_TRACEBACK_HEADER[0] != '\0')
-            {
-                fprintf(
-                    stream,
-                    "%s%s%s %s(most recent call last):%s\n",
-                    color_error_bold,
-                    CTB_TRACEBACK_HEADER,
-                    color_reset,
-                    color_error,
-                    color_reset
-                );
-            }
-            else
-            {
-                fprintf(
-                    stream,
-                    "%sTraceback%s %s(most recent call last):%s\n",
-                    color_error_bold,
-                    color_reset,
-                    color_error,
-                    color_reset
-                );
-            }
-
-            for (int i = 0; i < num_frames_to_print; i++)
-            {
-                print_frame(stream, i, &snapshot->call_stack_frames[i], use_color);
-            }
-
-            if (num_frames_exceed_max)
-            {
-                fprintf(
-                    stream,
-                    "\n      %s[... Skipped %d frames ...]%s\n\n",
-                    color_traceback_text,
-                    num_frames - CTB_MAX_CALL_STACK_DEPTH,
-                    color_reset
-                );
-            }
-
-            print_frame(stream, num_frames, &snapshot->error_frame, use_color);
-
-            fprintf(
-                stream,
-                "%s%s:%s %s%s%s\n",
-                color_error_bold,
-                error_to_string(snapshot->error),
-                color_reset,
-                color_error,
-                snapshot->error_message,
-                color_reset
-            );
-
-            if (e < (num_errors_to_print - 1))
-            {
-                fprintf(
-                    stream,
-                    "\n%sDuring handling of the above exception, another exception "
-                    "occurred:%s\n\n",
-                    color_another_exception,
-                    color_reset
-                );
-            }
-        }
-    }
-    else
+    if (num_errors_to_print <= 0)
     {
         fputs("There is no recorded error!\n", stream);
+        print_hrule(stream, use_color, CTB_ERROR_COLOR);
+        fflush(stream);
+        return;
+    }
+
+    for (int e = 0; e < num_errors_to_print; e++)
+    {
+        const CTB_Error_Snapshot_ *snapshot = &context->error_snapshots[e];
+        const int num_frames = snapshot->call_depth;
+        const bool stack_frames_exceed_max = (num_frames > CTB_MAX_CALL_STACK_DEPTH);
+        const int num_frames_to_print =
+            stack_frames_exceed_max ? CTB_MAX_CALL_STACK_DEPTH : num_frames;
+
+        /* Print Header */
+        const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
+                                      ? CTB_TRACEBACK_HEADER
+                                      : "Traceback";
+
+        fprintf(
+            stream,
+            "%s%s%s %s(most recent call last):%s\n",
+            theme.error_bold,
+            header_text,
+            theme.reset,
+            theme.error,
+            theme.reset
+        );
+
+        /* Print Stack Frames */
+        for (int i = 0; i < num_frames_to_print; i++)
+        {
+            print_frame(stream, i, &snapshot->call_stack_frames[i], &theme);
+        }
+
+        if (stack_frames_exceed_max)
+        {
+            fprintf(
+                stream,
+                "\n      %s[... Skipped %d frames ...]%s\n\n",
+                theme.tb_text,
+                num_frames - CTB_MAX_CALL_STACK_DEPTH,
+                theme.reset
+            );
+        }
+
+        print_frame(stream, num_frames, &snapshot->error_frame, &theme);
+
+        fprintf(
+            stream,
+            "%s%s:%s %s%s%s\n",
+            theme.error_bold,
+            error_to_string(snapshot->error),
+            theme.reset,
+            theme.error,
+            snapshot->error_message,
+            theme.reset
+        );
+
+        if (e < (num_errors_to_print - 1))
+        {
+            fprintf(
+                stream,
+                "\n%sDuring handling of the above exception, another exception "
+                "occurred:%s\n\n",
+                theme.tb_another_exception,
+                theme.reset
+            );
+        }
+    }
+
+    if (num_errors > CTB_MAX_NUM_ERROR)
+    {
+        fprintf(
+            stream,
+            "\n%s[... Truncated %d errors ...]%s\n",
+            theme.error_bold,
+            num_errors - CTB_MAX_NUM_ERROR,
+            theme.reset
+        );
     }
 
     print_hrule(stream, use_color, CTB_ERROR_COLOR);
@@ -319,38 +335,34 @@ void ctb_dump_traceback(void)
  * \brief Helper function to print the left column of the compilation info.
  *
  * \param[in] stream The output stream.
- * \param[in] use_color Whether to use color in the output.
- * \param[in] logo_lines The lines of the logo to print.
- * \param[in] logo_height The height of the logo.
- * \param[in] logo_width The width of the logo.
- * \param[in] left_padding The left padding before the logo.
- * \param[in] gutter The gutter space after the logo.
- * \param[in] line_idx The current line index to print.
+ * \param[in] theme The theme to use for coloring.
+ * \param[in] row_idx The current row index.
+ * \param[in] label The label text.
+ * \param[in] value The value text.
  */
-static void print_compilation_info_left_column(
+static void print_compilation_info_row(
     FILE *stream,
-    const bool use_color,
-    const char *restrict logo_lines[],
-    const int logo_height,
-    const int logo_width,
-    const int left_padding,
-    const int gutter,
-    int line_idx
+    const Theme *theme,
+    const int row_idx,
+    const char *restrict label,
+    const char *restrict value
 )
 {
-    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
-    const char *color_theme_bold = use_color ? CTB_THEME_BOLD_COLOR : "";
+    const int logo_height = sizeof(LOGO_LINES) / sizeof(LOGO_LINES[0]);
+    const int left_padding = 2;
+    const int gutter = 4;
+    const int logo_width = strlen(LOGO_LINES[0]);
 
-    if (line_idx < logo_height)
+    if (row_idx < logo_height)
     {
         fprintf(
             stream,
             "%*s%s%s%s%*s",
             left_padding,
             "",
-            color_theme_bold,
-            logo_lines[line_idx],
-            color_reset,
+            theme->theme_bold,
+            LOGO_LINES[row_idx],
+            theme->reset,
             gutter,
             ""
         );
@@ -359,196 +371,126 @@ static void print_compilation_info_left_column(
     {
         fprintf(stream, "%*s", left_padding + logo_width + gutter, "");
     }
+
+    if (label)
+    {
+        if (value)
+        {
+            fprintf(stream, "%s%s%s%s", theme->theme_bold, label, theme->reset, value);
+        }
+        else
+        {
+            fprintf(stream, "%s%s%s", theme->theme_bold, label, theme->reset);
+        }
+    }
+
+    fputs("\n", stream);
 }
 
 void ctb_print_compilation_info(void)
 {
     FILE *const stream = stdout;
     const bool use_color = should_use_color(stream);
-    const char *dash = should_use_utf8(stream) ? "\u2500" : "-";
-    const char *color_reset = use_color ? CTB_RESET_COLOR : "";
-    const char *color_error_bold = use_color ? CTB_ERROR_BOLD_COLOR : "";
-    const char *color_error = use_color ? CTB_ERROR_COLOR : "";
-    const char *color_traceback_text = use_color ? CTB_TRACEBACK_TEXT_COLOR : "";
-    // const char *color_another_exception =
-    //     use_color ? CTB_TRACEBACK_ANOTHER_EXCEPTION_TEXT_COLOR : "";
+    const Theme theme = get_theme(use_color);
+    const char *dash = get_dash(stream);
+    const int logo_height = sizeof(LOGO_LINES) / sizeof(LOGO_LINES[0]);
 
-    // int terminal_width;
-    // {
-    //     const int temp = get_terminal_width(stream);
-    //     const int max = CTB_HRULE_MAX_WIDTH;
-    //     const int min = CTB_HRULE_MIN_WIDTH;
-    //     terminal_width = (temp < min) ? min : (temp > max) ? max : temp;
-    // }
+    /* Determine OS String */
+    const char *os_str = "Unknown";
+#ifdef _WIN32
+    os_str = "Windows";
+#elif __APPLE__
+    os_str = "MacOS";
+#elif __linux__
+    os_str = "Linux";
+#endif
 
-    const char *logo_lines[] = {
-        "    %%%%%%%%%%%%    ",
-        "  %%%%%%%%%%%%%%%%  ",
-        " %%%%%%%%%%%%%%%%%% ",
-        "%%%%%%%%%%*  %%%%%%%",
-        "%%%%%%%*     %%%%%%%",
-        "%%%%%*       %%%%%%%",
-        "%%%%%%%*     %%%%%%%",
-        "%%%%%%%%%%*  %%%%%%%",
-        " %%%%%%%%%%%%%%%%%% ",
-        "  %%%%%%%%%%%%%%%%  ",
-        "    %%%%%%%%%%%%    "
-    };
+    /* Determine Compiler String */
+    char compiler_str[64];
+#ifdef _MSC_VER
+    snprintf(compiler_str, sizeof(compiler_str), "MSVC (version: %d)", _MSC_VER);
+#elif defined(__clang__)
+    snprintf(
+        compiler_str, sizeof(compiler_str), "Clang (version: %d)", __clang_major__
+    );
+#elif defined(__GNUC__)
+    snprintf(compiler_str, sizeof(compiler_str), "GCC (version: %d)", __GNUC__);
+#else
+    snprintf(compiler_str, sizeof(compiler_str), "Unknown");
+#endif
 
-    const int logo_height = sizeof(logo_lines) / sizeof(logo_lines[0]);
-    const int logo_width = strlen(logo_lines[0]);
-    const int left_padding = 2;
-    const int gutter = 4;
-    // const int left_col_total = left_padding + logo_width + gutter;
-    // const int right_col_max_width = terminal_width - left_col_total;
-
+    /* Print Header */
     print_hrule_with_header(
         stream, use_color, CTB_THEME_COLOR, "C Traceback Compilation Info"
     );
 
-    // Sorry, but right now its hard-coded, and without
-    // terminal width calculation for wrapping.
-    int current_line = 0;
-    const int total_items = 14;
-    for (int i = 0; i < total_items; i++)
+    /* Prepare Config Values for printing */
+    char buf_ver[32];
+    char buf_date[64];
+    char buf_stack[16];
+    char buf_msg[16];
+    char buf_err[16];
+    char buf_term[16];
+    char buf_file[16];
+    char buf_hmax[16];
+    char buf_hmin[16];
+
+    snprintf(buf_ver, sizeof(buf_ver), "%s", CTB_VERSION);
+    snprintf(buf_date, sizeof(buf_date), "%s %s", __DATE__, __TIME__);
+    snprintf(buf_stack, sizeof(buf_stack), "%d", CTB_MAX_CALL_STACK_DEPTH);
+    snprintf(buf_msg, sizeof(buf_msg), "%d", CTB_MAX_ERROR_MESSAGE_LENGTH);
+    snprintf(buf_err, sizeof(buf_err), "%d", CTB_MAX_NUM_ERROR);
+    snprintf(buf_term, sizeof(buf_term), "%d", CTB_DEFAULT_TERMINAL_WIDTH);
+    snprintf(buf_file, sizeof(buf_file), "%d", CTB_DEFAULT_FILE_WIDTH);
+    snprintf(buf_hmax, sizeof(buf_hmax), "%d", CTB_HRULE_MAX_WIDTH);
+    snprintf(buf_hmin, sizeof(buf_hmin), "%d", CTB_HRULE_MIN_WIDTH);
+
+    /* Construct Separator Line */
+    char separator_line[16] = {0};
+    for (int i = 0; i < 6; i++)
     {
-        print_compilation_info_left_column(
-            stream,
-            use_color,
-            logo_lines,
-            logo_height,
-            logo_width,
-            left_padding,
-            gutter,
-            current_line
-        );
-
-        if (i == 0)
-        {
-            /* Version */
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "C Traceback Version: "
-            );
-            fputs(CTB_VERSION, stream);
-        }
-        else if (i == 1)
-        {
-            /* OS information */
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Operating System: ");
-#ifdef _WIN32
-            fputs("Windows", stream);
-#elif __APPLE__
-            fputs("MacOS", stream);
-#elif __linux__
-            fputs("Linux", stream);
-#else
-            fputs("Unknown", stream);
-#endif
-        }
-        else if (i == 2)
-        {
-            /* Build date and time */
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Build Date: ");
-            fprintf(stream, "%s %s", __DATE__, __TIME__);
-        }
-        else if (i == 3)
-        {
-            /* Compiler information */
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Compiler: ");
-#ifdef _MSC_VER
-            fprintf(stream, "MSVC (version: %d)", _MSC_VER);
-#elif defined(__clang__)
-            fprintf(stream, "Clang (version: %d)", __clang_major__);
-#elif defined(__GNUC__)
-            fprintf(stream, "GCC (version: %d)", __GNUC__);
-#else
-            fputs("Unknown", stream);
-#endif
-        }
-
-        /* Config */
-        else if (i == 5)
-        {
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Config");
-        }
-        else if (i == 6)
-        {
-            for (int d = 0; d < 6; d++)
-            {
-                fputs(dash, stream);
-            }
-        }
-        else if (i == 7)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Max Call Stack Depth: "
-            );
-            fprintf(stream, "%d", CTB_MAX_CALL_STACK_DEPTH);
-        }
-        else if (i == 8)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Max Error Message Length: "
-            );
-            fprintf(stream, "%d", CTB_MAX_ERROR_MESSAGE_LENGTH);
-        }
-        else if (i == 9)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Max Number of Errors: "
-            );
-            fprintf(stream, "%d", CTB_MAX_NUM_ERROR);
-        }
-        else if (i == 10)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Default Terminal Width: "
-            );
-            fprintf(stream, "%d", CTB_DEFAULT_TERMINAL_WIDTH);
-        }
-        else if (i == 11)
-        {
-            print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Default File Width: ");
-            fprintf(stream, "%d", CTB_DEFAULT_FILE_WIDTH);
-        }
-        else if (i == 12)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Horizontal Rule Max Width: "
-            );
-            fprintf(stream, "%d", CTB_HRULE_MAX_WIDTH);
-        }
-        else if (i == 13)
-        {
-            print_bold(
-                stream, use_color, CTB_THEME_BOLD_COLOR, "Horizontal Rule Min Width: "
-            );
-            fprintf(stream, "%d", CTB_HRULE_MIN_WIDTH);
-        }
-
-        fprintf(stream, "\n");
-        current_line++;
+        strcat(separator_line, dash);
     }
 
-    while (current_line < logo_height)
+    /* Print Info Rows Linearly */
+    int row = 0;
+    print_compilation_info_row(stream, &theme, row++, "C Traceback Version: ", buf_ver);
+    print_compilation_info_row(stream, &theme, row++, "Operating System: ", os_str);
+    print_compilation_info_row(stream, &theme, row++, "Build Date: ", buf_date);
+    print_compilation_info_row(stream, &theme, row++, "Compiler: ", compiler_str);
+    print_compilation_info_row(stream, &theme, row++, "", NULL); /* Empty Row */
+    print_compilation_info_row(stream, &theme, row++, "Config", NULL);
+    print_compilation_info_row(stream, &theme, row++, separator_line, NULL);
+    print_compilation_info_row(
+        stream, &theme, row++, "Max Call Stack Depth: ", buf_stack
+    );
+    print_compilation_info_row(
+        stream, &theme, row++, "Max Error Message Length: ", buf_msg
+    );
+    print_compilation_info_row(
+        stream, &theme, row++, "Max Number of Errors: ", buf_err
+    );
+    print_compilation_info_row(
+        stream, &theme, row++, "Default Terminal Width: ", buf_term
+    );
+    print_compilation_info_row(stream, &theme, row++, "Default File Width: ", buf_file);
+    print_compilation_info_row(
+        stream, &theme, row++, "Horizontal Rule Max Width: ", buf_hmax
+    );
+    print_compilation_info_row(
+        stream, &theme, row++, "Horizontal Rule Min Width: ", buf_hmin
+    );
+
+    /* Fill remaining logo space */
+    while (row < logo_height)
     {
-        print_compilation_info_left_column(
-            stream,
-            use_color,
-            logo_lines,
-            logo_height,
-            logo_width,
-            left_padding,
-            gutter,
-            current_line
-        );
-        fprintf(stream, "\n");
-        current_line++;
+        print_compilation_info_row(stream, &theme, row, NULL, NULL);
+        row++;
     }
 
     /* Sample inline logging */
     fputs("\n", stream);
-    print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Inline logging (example)\n");
+    fprintf(stream, "%sInline logging (example)%s\n", theme.theme_bold, theme.reset);
     for (int d = 0; d < 24; d++)
     {
         fputs(dash, stream);
@@ -571,60 +513,49 @@ void ctb_print_compilation_info(void)
     };
 
     fputs("\n", stream);
-    print_bold(stream, use_color, CTB_THEME_BOLD_COLOR, "Traceback (example)\n");
+    fprintf(stream, "%sTraceback (example)%s\n", theme.theme_bold, theme.reset);
     for (int d = 0; d < 19; d++)
     {
         fputs(dash, stream);
     }
     fputs("\n", stream);
 
-    if (CTB_TRACEBACK_HEADER != NULL && CTB_TRACEBACK_HEADER[0] != '\0')
-    {
-        fprintf(
-            stream,
-            "%s%s%s %s(most recent call last):%s\n",
-            color_error_bold,
-            CTB_TRACEBACK_HEADER,
-            color_reset,
-            color_error,
-            color_reset
-        );
-    }
-    else
-    {
-        fprintf(
-            stream,
-            "%sTraceback%s %s(most recent call last):%s\n",
-            color_error_bold,
-            color_reset,
-            color_error,
-            color_reset
-        );
-    }
+    const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
+                                  ? CTB_TRACEBACK_HEADER
+                                  : "Traceback";
+    fprintf(
+        stream,
+        "%s%s%s %s(most recent call last):%s\n",
+        theme.error_bold,
+        header_text,
+        theme.reset,
+        theme.error,
+        theme.reset
+    );
 
     for (int i = 0; i < num_examples; i++)
     {
-        print_frame(stream, i, &example_frames[i], use_color);
+        print_frame(stream, i, &example_frames[i], &theme);
     }
 
     fprintf(
         stream,
         "\n      %s[... Skipped %d frames ...]%s\n\n",
-        color_traceback_text,
+        theme.tb_text,
         123,
-        color_reset
+        theme.reset
     );
 
-    print_frame(stream, 127, &error_frame, use_color);
+    print_frame(stream, 127, &error_frame, &theme);
     fprintf(
         stream,
         "%s%s:%s %s%s%s\n",
-        color_error_bold,
+        theme.error_bold,
         error_to_string(CTB_EXCEPTION),
-        color_reset,
-        color_error,
+        theme.reset,
+        theme.error,
         "Something went wrong!",
-        color_reset
+        theme.reset
     );
 
     print_hrule_with_header(stream, use_color, CTB_THEME_COLOR, "END");
