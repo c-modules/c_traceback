@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "c_traceback.h"
+#include "internal/traceback.h"
 
 #ifdef _WIN32
 
@@ -36,7 +37,7 @@ static void ctb_internal_signal_handler(int sig)
     raise(sig);
 }
 
-void ctb_install_default_signal_handler(void)
+void ctb_install_signal_handler(void)
 {
     if (signal(SIGABRT, ctb_internal_signal_handler) == SIG_ERR)
     {
@@ -104,7 +105,7 @@ static void ctb_internal_signal_handler(int sig, siginfo_t *info, void *context)
     raise(sig);
 }
 
-void ctb_install_default_signal_handler(void)
+void ctb_install_signal_handler(void)
 {
     stack_t ss;
     ss.ss_sp = ctb_stack_memory;
@@ -120,7 +121,7 @@ void ctb_install_default_signal_handler(void)
 
     sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sa.sa_sigaction = ctb_internal_signal_handler;
-    sigemptyset(&sa.sa_mask);
+    sigfillset(&sa.sa_mask);
 
     // Register Signals
     if (sigaction(SIGABRT, &sa, NULL) == -1)

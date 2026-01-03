@@ -9,8 +9,8 @@
 #define C_TRACEBACK_SIGNAL_HANDLER_H
 
 /**
- * \brief Install default signal handlers for C Traceback.
+ * \brief Install signal handlers for C Traceback.
  */
-void ctb_install_default_signal_handler(void);
+void ctb_install_signal_handler(void);
 
 #endif /* C_TRACEBACK_SIGNAL_HANDLER_H */

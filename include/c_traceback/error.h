@@ -11,7 +11,7 @@
 #include "c_traceback/error_codes.h"
 
 /**
- * \brief Wrapper for raising an error with the current call stack.
+ * \brief Wrapper for throwing an error with the current call stack.
  *
  * \param[in] ctb_error The error type.
  * \param[in] msg Error message.
@@ -23,7 +23,7 @@
     } while (0)
 
 /**
- * \brief Wrapper for raising an error with formatted message with the current call
+ * \brief Wrapper for throwing an error with formatted message with the current call
  * stack.
  *
  * \param[in] ctb_error The error type.
@@ -80,7 +80,7 @@ void ctb_throw_error_fmt(
  *
  * \return true if an error has occurred, false otherwise.
  */
-bool ctb_check_error_occurred(void);
+bool ctb_check_error(void);
 
 /**
  * \brief Clear all recorded errors.

@@ -9,7 +9,8 @@
 #define C_TRACEBACK_TRACE_H
 
 /**
- * \brief Wrapper macro for expression to automatically manage call stack frames.
+ * \brief Wrapper macro for expression to automatically manage call stack frames without
+ * checking for errors.
  *
  * \param[in] expr The expression to be traced.
  */
@@ -22,7 +23,8 @@
     } while (0)
 
 /**
- * \brief Wrapper macro for a code block to automatically manage call stack frames.
+ * \brief Wrapper macro for a code block to automatically manage call stack frames
+ * without checking for errors.
  *
  * \param[in] ... The block of code to be traced.
  */
@@ -46,7 +48,7 @@
     (ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr),                   \
      (expr),                                                                           \
      ctb_pop_call_stack_frame(),                                                       \
-     !ctb_check_error_occurred())
+     !ctb_check_error())
 
 /**
  * \brief Wrapper for an expression. If an error occurs after the expression, jump to
@@ -61,7 +63,7 @@
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #expr);                \
         (expr);                                                                        \
         ctb_pop_call_stack_frame();                                                    \
-        if (ctb_check_error_occurred())                                                \
+        if (ctb_check_error())                                                         \
         {                                                                              \
             goto label;                                                                \
         }                                                                              \
@@ -80,7 +82,7 @@
         ctb_push_call_stack_frame(__FILE__, __func__, __LINE__, #__VA_ARGS__);         \
         __VA_ARGS__                                                                    \
         ctb_pop_call_stack_frame();                                                    \
-        if (ctb_check_error_occurred())                                                \
+        if (ctb_check_error())                                                         \
         {                                                                              \
             goto label;                                                                \
         }                                                                              \

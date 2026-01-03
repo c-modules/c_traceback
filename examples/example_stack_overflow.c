@@ -13,7 +13,7 @@ void stack_overflow(int depth)
 
 int main(void)
 {
-    TRACE(ctb_install_default_signal_handler());
+    TRACE(ctb_install_signal_handler());
 
     // Stack overflow
     TRACE(stack_overflow(1));

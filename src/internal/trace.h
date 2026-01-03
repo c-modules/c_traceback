@@ -1,13 +1,13 @@
 /**
- * \file context.h
+ * \file trace.h
  * \brief Definitions of context and related data structures, and related function
  * headers for C Traceback library.
  *
  * \author Ching-Yin Ng
  */
 
-#ifndef CONTEXT_H
-#define CONTEXT_H
+#ifndef C_TRACEBACK_INTERNAL_TRACE_H
+#define C_TRACEBACK_INTERNAL_TRACE_H
 
 #include "c_traceback.h"
 
@@ -62,4 +62,4 @@ typedef struct CTB_Context
  */
 CTB_Context *get_context(void);
 
-#endif /* CONTEXT_H */
+#endif /* C_TRACEBACK_INTERNAL_TRACE_H */

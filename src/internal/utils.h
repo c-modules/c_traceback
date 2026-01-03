@@ -5,8 +5,8 @@
  * \author Ching-Yin Ng
  */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef C_TRACEBACK_INTERNAL_UTILS_H
+#define C_TRACEBACK_INTERNAL_UTILS_H
 
 #include <stdbool.h>
 
@@ -43,4 +43,4 @@ int get_parent_path_length(const char *restrict path);
  */
 int get_terminal_width(FILE *stream);
 
-#endif /* UTILS_H */
+#endif /* C_TRACEBACK_INTERNAL_UTILS_H */

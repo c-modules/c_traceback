@@ -4,7 +4,7 @@
 
 int main(void)
 {
-    TRACE(ctb_install_default_signal_handler());
+    TRACE(ctb_install_signal_handler());
 
     printf("Press Ctrl+C to trigger a keyboard interrupt...\n");
     while (1)

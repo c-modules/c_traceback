@@ -107,7 +107,7 @@ void ctb_throw_error_fmt(
     (context->num_errors)++;
 }
 
-bool ctb_check_error_occurred(void)
+bool ctb_check_error(void)
 {
     return get_context()->num_errors > 0;
 }

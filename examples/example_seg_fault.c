@@ -11,7 +11,7 @@ void some_function(void)
 
 int main(void)
 {
-    ctb_install_default_signal_handler();
+    ctb_install_signal_handler();
     THROW(CTB_BUFFER_ERROR, "Hello! This is a test error before segfault.");
 
     TRACE(some_function());

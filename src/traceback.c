@@ -11,6 +11,7 @@
 
 #include "c_traceback.h"
 #include "internal/trace.h"
+#include "internal/traceback.h"
 #include "internal/utils.h"
 
 #if defined(_WIN32)
@@ -234,7 +235,7 @@ static void print_hrule_with_header(
     print_hrule_internal(stream, use_color, color_code, header);
 }
 
-void ctb_log_error_traceback(void)
+void ctb_log_traceback(void)
 {
     const CTB_Context *context = get_context();
     FILE *const stream = stderr;
@@ -349,7 +350,7 @@ void ctb_log_error_traceback(void)
 
 void ctb_dump_traceback(void)
 {
-    ctb_log_error_traceback();
+    ctb_log_traceback();
     ctb_clear_error();
 }
 
@@ -518,6 +519,7 @@ void ctb_print_compilation_info(void)
         fputs(dash, stream);
     }
     fputs("\n", stream);
+    fflush(stream);
     LOG_ERROR_INLINE(CTB_ERROR, "Sample error for compilation info");
     LOG_WARNING_INLINE(CTB_USER_WARNING, "Sample warning for compilation info");
     LOG_MESSAGE_INLINE("Sample info for compilation info");
@@ -541,6 +543,7 @@ void ctb_print_compilation_info(void)
         fputs(dash, stream);
     }
     fputs("\n", stream);
+    fflush(stream);
 
     const char *header_text = (CTB_TRACEBACK_HEADER && CTB_TRACEBACK_HEADER[0])
                                   ? CTB_TRACEBACK_HEADER
