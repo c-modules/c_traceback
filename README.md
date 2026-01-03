@@ -17,8 +17,6 @@ Website: [https://www.ctraceback.com](https://www.ctraceback.com)
 
 ## To-dos before first release
 * Test MSVC
-* Complete exceptions design
-* Signal handlers
 * Finish docs
 
 ## Support Us

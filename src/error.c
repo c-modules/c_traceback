@@ -66,7 +66,14 @@ void ctb_throw_error(
     {
         CTB_Error_Snapshot_ *error_snapshot = &(context->error_snapshots[num_errors]);
         ctb_setup_error_snapshot_core(context, error_snapshot, error, file, line, func);
-        snprintf(error_snapshot->error_message, CTB_MAX_ERROR_MESSAGE_LENGTH, "%s", msg);
+        if (msg != NULL)
+        {
+            snprintf(error_snapshot->error_message, CTB_MAX_ERROR_MESSAGE_LENGTH, "%s", msg);
+        }
+        else
+        {
+            error_snapshot->error_message = "";
+        }
     }
 
     (context->num_errors)++;
